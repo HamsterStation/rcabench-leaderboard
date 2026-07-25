@@ -1,0 +1,57 @@
+dataset: dataset_name_RCABENCH
+path:
+    case_path: data/RCABENCH/cases.csv
+    ad_case_path: data/RCABENCH/cases/ad_cases.pkl
+    hash_dir: data/RCABENCH/hash_info/
+    sample_dir: data/RCABENCH/samples/
+    node_dict: data/RCABENCH/node_dict.pkl
+    metric_dict: data/RCABENCH/metric_dict.pkl
+
+feat_dim:
+    metric: 48
+    trace: 2
+    log: 4
+
+train_samples_num: whole
+
+model_param:
+    instance_dim: 53
+    num_heads: 1
+    tf_layers: 1
+    channel_dim: 54
+    gnn_hidden_dim: 54
+    gnn_out_dim: 32
+    noise_rate: 0.3
+    gnn_layers: 1
+    gru_hidden_dim: 32
+    gru_layers: 1
+    epochs: 10
+    batch_size: 4
+    learning_rate: 0.001
+
+downstream_param:
+    AD:
+        split_ratio: 0.6
+        method: num
+        t_value: 3
+        q: 0.1
+        level: 0.95
+        delay: 600
+        impact_window: 300
+        verbose: false
+    FT:
+        split_ratio: 0.6
+        method: num
+        t_value: 3
+        before: 59
+        after: 300
+        max_clusters: 25
+        verbose: false
+    RCL:
+        split_ratio: 0.6
+        method: num
+        t_value: 3
+        before: 10
+        after: 50
+        verbose: false
+

@@ -1,0 +1,30 @@
+name: Watch algorithm upstreams
+
+on:
+  schedule:
+    - cron: "17 2 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: python scripts/check_upstreams.py --apply
+      - uses: peter-evans/create-pull-request@v7
+        with:
+          branch: automation/update-algorithm-pins
+          delete-branch: true
+          commit-message: "chore: update algorithm revisions"
+          title: "chore: evaluate updated algorithm revisions"
+          body: |
+            Automated upstream revision update.
+
+            Merging this PR builds new immutable containers and queues a full
+            benchmark on the self-hosted runner.
+          labels: algorithm-update,benchmark
+

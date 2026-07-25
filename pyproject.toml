@@ -1,0 +1,30 @@
+[build-system]
+requires = ["setuptools>=75"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "rcabench-leaderboard"
+version = "0.1.0"
+description = "Reproducible RCABench evaluation pipeline and static leaderboard"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = ["huggingface-hub>=0.28,<2"]
+
+[project.optional-dependencies]
+dev = ["pytest>=8", "ruff>=0.9"]
+
+[project.scripts]
+rcabench-leaderboard = "rcabench_leaderboard.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM"]

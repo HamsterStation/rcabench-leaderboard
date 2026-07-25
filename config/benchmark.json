@@ -1,0 +1,80 @@
+{
+  "schema_version": 1,
+  "benchmark": {
+    "id": "fse-rcabench-fault-service-seed42",
+    "title": "FSE RCABench",
+    "primary_metric": "mrr",
+    "deduplicate_services": true
+  },
+  "dataset": {
+    "repo_id": "HamsterStation/rcabench-fse",
+    "repo_type": "dataset",
+    "revision": "v1.0.0",
+    "manifest_sha256": "588165081264b3de851b7b3b7ec59d27a5258107ad04c56d8c1c3f2a5ff76da7",
+    "data_dir": ".",
+    "manifests": {
+      "all": "manifests/all.txt",
+      "train": "manifests/train.txt",
+      "test": "manifests/test.txt"
+    },
+    "expected_cases": {
+      "all": 1422,
+      "train": 1126,
+      "test": 296
+    }
+  },
+  "algorithms": {
+    "baro": {
+      "display_name": "BARO",
+      "source": "https://github.com/LGU-SE-Internal/baro.git",
+      "commit": "0a18961e30ca058a249276f9f4e961ca435eaf22",
+      "image": "ghcr.io/hamsterstation/rcabench-baro:0a18961e",
+      "scope": "all",
+      "workers": 4,
+      "cpus_per_worker": 2,
+      "timeout_seconds": 300,
+      "max_algorithm_errors": 0,
+      "python": ".venv/bin/python",
+      "workdir": "/app"
+    },
+    "art": {
+      "display_name": "ART",
+      "source": "https://github.com/LGU-SE-Internal/ART.git",
+      "commit": "ba8dfd3f0054cf90af3135dcdfa0f7a339ab254d",
+      "image": "ghcr.io/hamsterstation/rcabench-art:ba8dfd3f",
+      "scope": "test",
+      "workers": 1,
+      "cpus_per_worker": 4,
+      "timeout_seconds": 300,
+      "max_algorithm_errors": 2,
+      "python": "/.venv/bin/python",
+      "workdir": "/"
+    },
+    "eadro": {
+      "display_name": "Eadro",
+      "source": "https://github.com/LGU-SE-Internal/Eadro.git",
+      "commit": "4ee55dfc3b23000dc3dcfda725bd63737b97a457",
+      "image": "ghcr.io/hamsterstation/rcabench-eadro:4ee55dfc",
+      "scope": "test",
+      "workers": 1,
+      "cpus_per_worker": 4,
+      "timeout_seconds": 300,
+      "max_algorithm_errors": 0,
+      "python": ".venv/bin/python",
+      "workdir": "/app"
+    },
+    "causalrca": {
+      "display_name": "CausalRCA",
+      "source": "https://github.com/LGU-SE-Internal/CausalRCA.git",
+      "commit": "3f4ceee8c821c7332dc20ac5ba70175b3930bf21",
+      "image": "ghcr.io/hamsterstation/rcabench-causalrca:3f4ceee8",
+      "scope": "all",
+      "workers": 4,
+      "cpus_per_worker": 2,
+      "timeout_seconds": 1800,
+      "max_algorithm_errors": 0,
+      "python": ".venv/bin/python",
+      "workdir": "/app"
+    }
+  }
+}

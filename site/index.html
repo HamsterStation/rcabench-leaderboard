@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="A reproducible leaderboard for root-cause analysis algorithms on RCABench.">
+    <title>RCA Field Notes — Leaderboard</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Fraunces:opsz,wght@9..144,600;9..144,800&family=Manrope:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+  </head>
+  <body>
+    <div class="grain" aria-hidden="true"></div>
+    <header class="masthead">
+      <a class="wordmark" href="#">RCA / FIELD NOTES</a>
+      <div class="status"><span></span> reproducible benchmark</div>
+    </header>
+
+    <main>
+      <section class="hero">
+        <p class="eyebrow">FSE RCABench · fault + service balanced split</p>
+        <h1>Root causes,<br><em>ranked in the open.</em></h1>
+        <p class="lede">Every score is tied to a dataset revision, an algorithm commit, and an auditable run. No hand-copied tables.</p>
+        <div class="dataset-stamp">
+          <span>DATASET</span>
+          <strong id="case-count">—</strong>
+          <small>diagnostic cases</small>
+        </div>
+      </section>
+
+      <section class="board" aria-labelledby="leaderboard-title">
+        <div class="section-head">
+          <div>
+            <p class="index">01 / CURRENT TABLE</p>
+            <h2 id="leaderboard-title">Leaderboard</h2>
+          </div>
+          <div class="legend"><span class="dot"></span> delta versus paper, percentage points</div>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Rank / Method</th>
+                <th>Scope</th>
+                <th>Top@1</th>
+                <th>Top@3</th>
+                <th>Top@5</th>
+                <th>Avg@3</th>
+                <th>Avg@5</th>
+                <th class="primary">MRR</th>
+                <th>Time</th>
+              </tr>
+            </thead>
+            <tbody id="leaderboard-body"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="method">
+        <div>
+          <p class="index">02 / PROTOCOL</p>
+          <h2>Built to be rerun,<br>not merely read.</h2>
+        </div>
+        <div class="protocol-grid">
+          <article><b>01</b><h3>Version everything</h3><p>Data revisions, container tags, source commits, split manifests, and evaluation rules travel together.</p></article>
+          <article><b>02</b><h3>Isolate every case</h3><p>Each datapack executes in a clean container with bounded CPU, timeout, logs, and resumable output.</p></article>
+          <article><b>03</b><h3>Publish from CI</h3><p>Validated metrics flow into this page automatically after the full self-hosted run completes.</p></article>
+        </div>
+      </section>
+    </main>
+
+    <footer>
+      <span>RCABench Leaderboard</span>
+      <span id="updated-at">Last update —</span>
+    </footer>
+    <script src="app.js"></script>
+  </body>
+</html>
+
