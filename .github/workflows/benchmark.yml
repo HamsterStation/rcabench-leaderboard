@@ -24,7 +24,7 @@ concurrency:
 
 jobs:
   evaluate:
-    if: github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success'
+    if: vars.BENCHMARK_ENABLED == 'true' && (github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success')
     strategy:
       fail-fast: false
       max-parallel: 1
@@ -134,4 +134,3 @@ jobs:
           git commit -m 'results: publish benchmark ${{ github.run_id }}' || exit 0
           git pull --rebase origin main
           git push origin HEAD:main
-

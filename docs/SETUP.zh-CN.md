@@ -21,6 +21,9 @@ Pages 启用后，在 `Settings → Secrets and variables → Actions → Variab
 |---|---|
 | `HF_TOKEN` | 读取私有 Hugging Face Dataset；使用 read token 即可 |
 
+Runner 和 Hugging Face 数据准备好后，在 Actions Variables 增加
+`BENCHMARK_ENABLED=true`。在此之前，全量 workflow 会安全跳过，不会无限排队。
+
 不要将 Hugging Face Token、SSH 密码或 GitHub Token 写入配置文件。
 
 ### 上传数据到 Hugging Face
