@@ -10,6 +10,11 @@
 - Pages → Build and deployment → Source：`GitHub Actions`
 - Packages：允许 Actions 读取和写入 GHCR
 
+Pages 启用后，在 `Settings → Secrets and variables → Actions → Variables`
+增加 `PAGES_ENABLED=true`。当前 GitHub Free 不支持私有仓库 Pages；可以将仅含
+代码和指标的仓库公开，或把 `site/` 发布到单独的公开仓库。Hugging Face 数据
+仓库仍然可以保持 private。
+
 在 `Settings → Secrets and variables → Actions` 添加：
 
 | Secret | 用途 |
@@ -137,4 +142,3 @@ Actions 页面重新执行 workflow。不要删除已有 case 结果和训练 ca
 5. 将算法名加入 `benchmark.yml` matrix。
 
 所有算法最终必须输出统一的 service 级别排名，评估和网页部分无需单独修改。
-
