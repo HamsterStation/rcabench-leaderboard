@@ -49,6 +49,12 @@ jobs:
       - name: Install benchmark controller
         if: steps.select.outputs.enabled == 'true'
         run: python -m pip install -e .
+      - name: Resolve versioned cache paths
+        if: steps.select.outputs.enabled == 'true'
+        run: |
+          REVISION=$(python -c 'import json; print(json.load(open("config/benchmark.json"))["dataset"]["revision"])')
+          SAFE_REVISION=$(printf '%s' "$REVISION" | tr -c 'A-Za-z0-9_.-' '-')
+          echo "DATASET_DIR=$HOME/.cache/rcabench/datasets/$SAFE_REVISION" >> "$GITHUB_ENV"
       - name: Log in to GHCR
         if: steps.select.outputs.enabled == 'true'
         uses: docker/login-action@v3
@@ -61,8 +67,8 @@ jobs:
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
         run: |
-          mkdir -p "$HOME/.cache/rcabench/datasets/v1.0.0"
-          rcabench-leaderboard download --output "$HOME/.cache/rcabench/datasets/v1.0.0"
+          mkdir -p "$DATASET_DIR"
+          rcabench-leaderboard download --output "$DATASET_DIR"
       - name: Pull algorithm image
         if: steps.select.outputs.enabled == 'true'
         run: |
@@ -73,7 +79,7 @@ jobs:
         id: prepare
         run: |
           ASSETS=$(rcabench-leaderboard prepare '${{ matrix.algorithm }}' \
-            --snapshot "$HOME/.cache/rcabench/datasets/v1.0.0" \
+            --snapshot "$DATASET_DIR" \
             --cache-root "$HOME/.cache/rcabench")
           echo "assets=$ASSETS" >> "$GITHUB_OUTPUT"
       - name: Evaluate algorithm
@@ -86,10 +92,10 @@ jobs:
           RUN_ROOT="$HOME/rcabench-runs/${{ github.run_id }}/${{ matrix.algorithm }}"
           mkdir -p "$RUN_ROOT"
           rcabench-leaderboard run '${{ matrix.algorithm }}' \
-            --snapshot "$HOME/.cache/rcabench/datasets/v1.0.0" \
+            --snapshot "$DATASET_DIR" \
             --output "$RUN_ROOT/cases" "${ASSET_ARGS[@]}"
           rcabench-leaderboard evaluate '${{ matrix.algorithm }}' \
-            --snapshot "$HOME/.cache/rcabench/datasets/v1.0.0" \
+            --snapshot "$DATASET_DIR" \
             --results "$RUN_ROOT/cases" --output "$RUN_ROOT/metrics.json" \
             --require-complete
           cp "$RUN_ROOT/metrics.json" metrics.json
