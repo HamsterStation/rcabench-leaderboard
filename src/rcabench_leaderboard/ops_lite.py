@@ -19,6 +19,13 @@ def _read_jsonl(path: Path) -> list[dict[str, Any]]:
     return records
 
 
+def _read_case_manifest(path: Path) -> list[str]:
+    cases = [line.strip() for line in path.read_text().splitlines() if line.strip()]
+    if len(cases) != len(set(cases)):
+        raise ValueError(f"split manifest contains duplicate case names: {path}")
+    return sorted(cases)
+
+
 def _labels(record: dict[str, Any]) -> set[str]:
     system = str(record.get("system", "unknown"))
     fault = str(record.get("primary_kind", "unknown"))
@@ -223,6 +230,8 @@ def normalize_ops_lite(
     expected_cases: int = 500,
     test_size: int = 100,
     seed: int = 42,
+    pinned_train_manifest: str | Path | None = None,
+    pinned_test_manifest: str | Path | None = None,
 ) -> dict[str, Any]:
     root = Path(snapshot).resolve()
     manifest_path = root / "manifest.jsonl"
@@ -235,8 +244,20 @@ def normalize_ops_lite(
     if len(records) != expected_cases:
         raise ValueError(f"manifest has {len(records)} cases; expected {expected_cases}")
 
-    train, test = iterative_train_test_split(records, test_size=test_size, seed=seed)
     all_cases = sorted(str(record["name"]) for record in records)
+    if (pinned_train_manifest is None) != (pinned_test_manifest is None):
+        raise ValueError("both pinned train and test manifests must be provided")
+    if pinned_train_manifest is not None and pinned_test_manifest is not None:
+        train = _read_case_manifest(Path(pinned_train_manifest))
+        test = _read_case_manifest(Path(pinned_test_manifest))
+        strategy = "pinned iterative multilabel stratification"
+    else:
+        train, test = iterative_train_test_split(records, test_size=test_size, seed=seed)
+        strategy = "iterative multilabel stratification"
+    if len(test) != test_size or len(train) != len(records) - test_size:
+        raise ValueError(
+            f"split sizes do not match expected train/test sizes: {len(train)}/{len(test)}"
+        )
     train_set, test_set = set(train), set(test)
     if train_set & test_set or train_set | test_set != set(all_cases):
         raise RuntimeError("generated split is overlapping or incomplete")
@@ -273,7 +294,7 @@ def normalize_ops_lite(
         "source_revision": "9ac09981c08ab02a0b923eab7830d778934851a8",
         "manifest_sha256": digest,
         "seed": seed,
-        "strategy": "iterative multilabel stratification",
+        "strategy": strategy,
         "labels": ["system", "primary_kind", "service", "system_x_fault", "fault_x_service"],
         "training_label_policy": "first ground-truth service; evaluation accepts all root services",
         "splits": {

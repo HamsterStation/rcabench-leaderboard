@@ -1,8 +1,11 @@
 import json
 
+import pytest
+
 from rcabench_leaderboard.ops_lite import (
     _link_raw_files,
     _merge_ground_truth,
+    _read_case_manifest,
     iterative_train_test_split,
 )
 
@@ -52,3 +55,13 @@ def test_compatibility_view_uses_hardlinks_visible_in_case_mount(tmp_path):
     target = converted / source.name
     assert target.read_bytes() == source.read_bytes()
     assert target.stat().st_ino == source.stat().st_ino
+
+
+def test_pinned_manifest_is_sorted_and_rejects_duplicates(tmp_path):
+    manifest = tmp_path / "split.txt"
+    manifest.write_text("case-b\ncase-a\n")
+    assert _read_case_manifest(manifest) == ["case-a", "case-b"]
+
+    manifest.write_text("case-a\ncase-a\n")
+    with pytest.raises(ValueError, match="duplicate"):
+        _read_case_manifest(manifest)

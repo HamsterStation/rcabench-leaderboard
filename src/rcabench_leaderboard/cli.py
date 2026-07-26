@@ -72,12 +72,16 @@ def command_download(args: argparse.Namespace) -> None:
 def command_normalize_ops_lite(args: argparse.Namespace) -> None:
     config = load_config(args.config)
     dataset = config["dataset"]
+    pinned = dataset.get("pinned_split_manifests", {})
+    config_root = args.config.resolve().parent
     metadata = normalize_ops_lite(
         args.snapshot,
         expected_manifest_sha256=dataset.get("manifest_sha256"),
         expected_cases=int(dataset["expected_cases"]["all"]),
         test_size=int(dataset["expected_cases"]["test"]),
         seed=int(dataset.get("split_seed", 42)),
+        pinned_train_manifest=config_root / pinned["train"] if pinned else None,
+        pinned_test_manifest=config_root / pinned["test"] if pinned else None,
     )
     print(json.dumps(metadata, indent=2))
 

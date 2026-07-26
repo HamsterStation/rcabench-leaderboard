@@ -12,6 +12,10 @@
     "revision": "9ac09981c08ab02a0b923eab7830d778934851a8",
     "manifest_sha256": "5d4d3960446408a6e43ea87c51a255aa7a39d43a1db6aeb731cf20b18f4fb7cd",
     "split_seed": 42,
+    "pinned_split_manifests": {
+      "train": "splits/ops-lite-seed42-train.txt",
+      "test": "splits/ops-lite-seed42-test.txt"
+    },
     "download_workers": 16,
     "allow_patterns": [
       "manifest.jsonl",
