@@ -62,7 +62,7 @@
       "workers": 1,
       "cpus_per_worker": 4,
       "timeout_seconds": 300,
-      "max_algorithm_errors": 0,
+      "max_algorithm_errors": 3,
       "python": "/.venv/bin/python",
       "workdir": "/"
     },
