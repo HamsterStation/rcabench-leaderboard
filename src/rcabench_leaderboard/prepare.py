@@ -81,23 +81,17 @@ def prepare_art(
         command[3:3] = [
             "--entrypoint",
             "/.venv/bin/python",
+            "--env",
+            "PYTHONPATH=/",
             "--volume",
             f"{links.resolve()}:/dataset:ro",
             "--volume",
             f"{art_data.resolve()}:/art-data",
+            "--volume",
+            str((repository_root / "containers/run_art_preprocess.py").resolve())
+            + ":/run-preprocess.py:ro",
         ]
-        command.extend(
-            [
-                "/client.py",
-                "preprocess",
-                "--data-root",
-                "/dataset",
-                "--output-dir",
-                "/art-data/RCABENCH",
-                "--dataset-type",
-                "RCABENCH_r1",
-            ]
-        )
+        command.append("/run-preprocess.py")
         _run(command, logs / "preprocess.log", allow_failure=True)
         if not (samples / "train_samples.pkl").is_file() or not (
             samples / "test_samples.pkl"
