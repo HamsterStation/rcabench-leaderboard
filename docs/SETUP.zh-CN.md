@@ -110,6 +110,16 @@ fault × service。原始 `cases/` 不会被修改。多根因样本评测时任
 命中都算命中；ART/Eadro 的公开预处理代码只支持单标签，因此训练时使用
 `ground_truth` 中第一个 service，这项限制会记录在 split metadata 中。
 
+服务器上一键断点续跑四种算法：
+
+```bash
+nohup bash scripts/run_ops_lite_server.sh \
+  > /mnt/jfs-fixed/ops-lite-runs/seed42/master.log 2>&1 &
+```
+
+阶段写入 `stage.txt`，每个算法的 `progress.json`、case 日志和最终指标分别保存在
+`results/` 与 `metrics/`。重复执行会复用训练 checkpoint，并跳过已有 case 结果。
+
 ## 2. 数据更新
 
 新数据必须使用新的不可变版本，例如 `v1.1.0`：
