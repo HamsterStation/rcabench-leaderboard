@@ -7,8 +7,8 @@ import argparse
 import gc
 import glob
 import pickle
-import random
 from collections import Counter, defaultdict
+from dataclasses import dataclass
 from pathlib import Path
 
 import dgl
@@ -16,21 +16,22 @@ import numpy as np
 import src.eadro.handlers as handlers
 import torch
 from loguru import logger
+from src.exp.config import Config
 from src.preprocessing.base import DatasetMetadata
-from torch.utils.data import Dataset
+from torch.utils.data import DataLoader, Dataset
 
 
-def compact_sample(sample):
-    sample.log = np.asarray(sample.log, dtype=np.float32)
-    sample.trace = np.asarray(sample.trace, dtype=np.float32)
-    sample.metric = np.asarray(sample.metric, dtype=np.float32)
-    return sample
+@dataclass(frozen=True)
+class SampleRef:
+    batch_file: str
+    index: int
+    label: int
 
 
-class LazyChunkDataset(Dataset):
-    """Create graph tensors on access instead of duplicating them in memory."""
+class DiskBackedChunkDataset(Dataset):
+    """Load one preprocessing batch at a time instead of retaining 119 GB in RAM."""
 
-    def __init__(self, samples, metadata: DatasetMetadata):
+    def __init__(self, samples: list[SampleRef], metadata: DatasetMetadata):
         self.samples = samples
         self.metadata = metadata
         self.node_num = len(metadata.services)
@@ -39,17 +40,21 @@ class LazyChunkDataset(Dataset):
         if not sources:
             raise ValueError("metadata contains no service calling edges")
         self.edges = (sources, targets)
-        self.labels = [
-            sample.get_gt_service_id(metadata.service_name_to_id) for sample in samples
-        ]
-        logger.info(f"lazy dataset initialized with {len(samples)} samples")
-        logger.info(f"label distribution: {dict(Counter(self.labels))}")
+        self.cached_path: str | None = None
+        self.cached_batch = None
+        logger.info(f"disk-backed dataset initialized with {len(samples)} samples")
+        logger.info(f"label distribution: {dict(Counter(ref.label for ref in samples))}")
 
     def __len__(self):
         return len(self.samples)
 
     def __getitem__(self, index):
-        sample = self.samples[index]
+        ref = self.samples[index]
+        if ref.batch_file != self.cached_path:
+            with open(ref.batch_file, "rb") as handle:
+                self.cached_batch = pickle.load(handle)
+            self.cached_path = ref.batch_file
+        sample = self.cached_batch[ref.index]
         graph = dgl.graph(self.edges, num_nodes=self.node_num)
         graph.ndata["logs"] = torch.as_tensor(
             np.nan_to_num(np.asarray(sample.log), nan=0.0, posinf=0.0, neginf=0.0),
@@ -63,7 +68,31 @@ class LazyChunkDataset(Dataset):
             np.nan_to_num(np.asarray(sample.trace), nan=0.0, posinf=0.0, neginf=0.0),
             dtype=torch.float32,
         )
-        return graph, self.labels[index]
+        return graph, ref.label
+
+
+def create_bounded_data_loaders(self, train_samples, test_samples, metadata, config):
+    """Keep file locality and bound each CPU batch to a safe size."""
+    train_dataset = DiskBackedChunkDataset(train_samples, metadata)
+    test_dataset = DiskBackedChunkDataset(test_samples, metadata)
+    batch_size = min(int(config.get("training.batch_size")), 16)
+    logger.info(f"using bounded batch_size={batch_size} with sequential disk access")
+    self.metadata = metadata
+    self.train_loader = DataLoader(
+        train_dataset,
+        batch_size=batch_size,
+        shuffle=False,
+        collate_fn=handlers.collate_fn,
+        pin_memory=False,
+    )
+    self.test_loader = DataLoader(
+        test_dataset,
+        batch_size=batch_size,
+        shuffle=False,
+        collate_fn=handlers.collate_fn,
+        pin_memory=False,
+    )
+    return self.train_loader, self.test_loader
 
 
 def load_data_streaming(
@@ -103,33 +132,60 @@ def load_data_streaming(
 
     cap = min(counts.values()) * 20 if config.get("training.balance_train_set") else None
     logger.info(f"upstream cap per label={cap}; original counts={dict(counts)}")
-    selected = defaultdict(list)
+    selected_counts = defaultdict(int)
+    train_samples: list[SampleRef] = []
     for batch_file in train_files:
         with open(batch_file, "rb") as handle:
             batch = pickle.load(handle)
-        for sample in batch:
+        for index, sample in enumerate(batch):
             label = sample.get_gt_service_id(metadata.service_name_to_id)
-            if cap is None or len(selected[label]) < cap:
-                selected[label].append(compact_sample(sample))
+            if cap is None or selected_counts[label] < cap:
+                train_samples.append(SampleRef(batch_file, index, label))
+                selected_counts[label] += 1
         del batch
         gc.collect()
-    train_samples = [sample for samples in selected.values() for sample in samples]
 
-    test_samples = []
+    test_samples: list[SampleRef] = []
     for batch_file in test_files:
         with open(batch_file, "rb") as handle:
             batch = pickle.load(handle)
-        test_samples.extend(compact_sample(sample) for sample in batch)
+        test_samples.extend(
+            SampleRef(
+                batch_file,
+                index,
+                sample.get_gt_service_id(metadata.service_name_to_id),
+            )
+            for index, sample in enumerate(batch)
+        )
         del batch
         gc.collect()
 
-    random.shuffle(train_samples)
-    random.shuffle(test_samples)
+    logger.info(
+        f"selected disk references: train={len(train_samples)} test={len(test_samples)}"
+    )
     return train_samples, test_samples, metadata
 
 
-handlers.ChunkDataset = LazyChunkDataset
+handlers.ChunkDataset = DiskBackedChunkDataset
 handlers.EadroDataHandler.load_data = load_data_streaming
+handlers.EadroDataHandler.create_data_loaders = create_bounded_data_loaders
+
+original_config_get = Config.get
+
+
+def bounded_config_get(self, key):
+    # OPS-Lite runs on a 15 GiB CPU server; validate every epoch and retain the best of 10.
+    overrides = {
+        "training.epochs": 10,
+        "training.evaluation_epoch": 1,
+        "training.patience": 3,
+    }
+    if key in overrides:
+        return overrides[key]
+    return original_config_get(self, key)
+
+
+Config.get = bounded_config_get
 
 from client import train  # noqa: E402
 
@@ -151,4 +207,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
