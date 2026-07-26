@@ -1,7 +1,7 @@
 # RCABench Leaderboard
 
-Reproducible CI/CD for BARO, ART, Eadro, and CausalRCA on the FSE RCABench
-dataset. The repository pins every algorithm commit and dataset revision,
+Reproducible CI/CD for BARO, ART, Eadro, and CausalRCA on FSE RCABench and
+OPS-Lite. The repository pins every algorithm commit and dataset revision,
 executes each datapack in Docker, calculates one canonical metric schema, and
 publishes the latest results as a static leaderboard.
 
@@ -22,6 +22,7 @@ original dataset redistribution terms have been confirmed.
 
 1. `config/benchmark.json` pins the data revision, split sizes, algorithm
    commits, images, resources, and error tolerances.
+   `config/ops-lite.json` independently pins the public OPS-Lite benchmark.
 2. `build-images.yml` builds Linux/AMD64 images from the exact upstream commits
    and pushes them to GHCR.
 3. `benchmark.yml` downloads the pinned Hugging Face snapshot and runs the four
@@ -43,6 +44,17 @@ python -m pip install -e '.[dev]'
 rcabench-leaderboard validate
 rcabench-leaderboard doctor
 rcabench-leaderboard download --output .cache/datasets/v1.0.0
+```
+
+Prepare the pinned OPS-Lite snapshot. This preserves the raw cases, creates a
+compatible case view, and generates a deterministic 400/100 split balanced on
+system, fault, service, and fault-service marginals:
+
+```bash
+rcabench-leaderboard download --config config/ops-lite.json \
+  --output .cache/datasets/ops-lite
+rcabench-leaderboard normalize-ops-lite --config config/ops-lite.json \
+  --snapshot .cache/datasets/ops-lite
 ```
 
 Run BARO on the first five cases:
@@ -76,9 +88,11 @@ rcabench-leaderboard prepare eadro --snapshot .cache/datasets/v1.0.0
   fails if their count exceeds the configured tolerance.
 - Rankings are compared at service level against every service listed in
   `injection.json` ground truth.
+- OPS-Lite cases can contain two root services. Evaluation accepts either root;
+  ART/Eadro training uses the first listed root because their released label
+  pipelines are single-label.
 
 ## Operations
 
 See [docs/SETUP.zh-CN.md](docs/SETUP.zh-CN.md) for Hugging Face upload,
 GitHub secrets, self-hosted runner setup, update flow, and recovery steps.
-

@@ -16,6 +16,22 @@ def record_metrics(
 ) -> dict[str, Any]:
     path = Path(leaderboard_path)
     leaderboard = json.loads(path.read_text())
+    if "benchmarks" not in leaderboard:
+        leaderboard = {
+            "schema_version": 2,
+            "generated_at": leaderboard.get("generated_at"),
+            "benchmarks": [
+                {
+                    "benchmark": leaderboard["benchmark"],
+                    "entries": leaderboard.get("entries", []),
+                    **(
+                        {"paper_reference": leaderboard["paper_reference"]}
+                        if "paper_reference" in leaderboard
+                        else {}
+                    ),
+                }
+            ],
+        }
     metrics = json.loads(Path(metrics_path).read_text())
     algorithm = config["algorithms"][algorithm_name]
     entry = {
@@ -27,13 +43,38 @@ def record_metrics(
         "run_id": run_id,
         "metrics": metrics,
     }
-    # The leaderboard stores the latest run per algorithm; CI archives every run separately.
+    benchmark_id = config["benchmark"]["id"]
+    board = next(
+        (
+            item
+            for item in leaderboard["benchmarks"]
+            if item["benchmark"]["id"] == benchmark_id
+        ),
+        None,
+    )
+    if board is None:
+        dataset = config["dataset"]
+        board = {
+            "benchmark": {
+                "id": benchmark_id,
+                "title": config["benchmark"]["title"],
+                "dataset_cases": dataset["expected_cases"]["all"],
+                "train_cases": dataset["expected_cases"]["train"],
+                "test_cases": dataset["expected_cases"]["test"],
+                "dataset_revision": dataset.get("manifest_sha256", dataset["revision"]),
+            },
+            "entries": [],
+        }
+        leaderboard["benchmarks"].append(board)
+
+    # Each board stores the latest run per algorithm; CI archives every run separately.
     entries = [
-        item for item in leaderboard.get("entries", []) if item["algorithm"] != algorithm_name
+        item for item in board.get("entries", []) if item["algorithm"] != algorithm_name
     ]
     entries.append(entry)
     entries.sort(key=lambda item: (-float(item["metrics"].get("mrr", 0)), item["algorithm"]))
-    leaderboard["entries"] = entries
+    board["entries"] = entries
+    leaderboard["benchmarks"].sort(key=lambda item: item["benchmark"]["id"])
     leaderboard["generated_at"] = datetime.now(UTC).isoformat().replace("+00:00", "Z")
     temporary = path.with_suffix(path.suffix + ".tmp")
     temporary.write_text(json.dumps(leaderboard, indent=2, sort_keys=False) + "\n")

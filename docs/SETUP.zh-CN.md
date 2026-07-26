@@ -23,6 +23,8 @@ Pages 启用后，在 `Settings → Secrets and variables → Actions → Variab
 
 Runner 和 Hugging Face 数据准备好后，在 Actions Variables 增加
 `BENCHMARK_ENABLED=true`。在此之前，全量 workflow 会安全跳过，不会无限排队。
+默认数据、checkpoint 和运行结果写到 `/mnt/jfs-fixed/rcabench-ci`；如需改位置，
+设置 Actions Variable `RCABENCH_STORAGE`，不要使用空间紧张的 `/home`。
 
 不要将 Hugging Face Token、SSH 密码或 GitHub Token 写入配置文件。
 
@@ -89,6 +91,24 @@ sudo ./svc.sh status
 ```
 
 GitHub 页面显示 runner 为 `Idle` 后，执行一次 `Full benchmark` workflow。
+该 workflow 的 `benchmarks` 参数可以选 `fse`、`ops-lite` 或 `all`。
+
+### OPS-Lite 数据
+
+OPS-Lite 是公开数据集，不需要 `HF_TOKEN`。流水线固定到 commit
+`9ac09981c08ab02a0b923eab7830d778934851a8`，下载后自动执行兼容化：
+
+```bash
+rcabench-leaderboard download --config config/ops-lite.json \
+  --output /mnt/jfs-fixed/ops-lite-9ac09981
+rcabench-leaderboard normalize-ops-lite --config config/ops-lite.json \
+  --snapshot /mnt/jfs-fixed/ops-lite-9ac09981
+```
+
+生成的 400/100 划分使用 seed 42，同时平衡 system、fault type、service 和
+fault × service。原始 `cases/` 不会被修改。多根因样本评测时任一真实 service
+命中都算命中；ART/Eadro 的公开预处理代码只支持单标签，因此训练时使用
+`ground_truth` 中第一个 service，这项限制会记录在 split metadata 中。
 
 ## 2. 数据更新
 

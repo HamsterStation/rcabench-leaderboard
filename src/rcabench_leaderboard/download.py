@@ -17,6 +17,7 @@ def download_dataset(config: dict[str, Any], output: str | Path) -> Path:
         revision=dataset["revision"],
         local_dir=output_path,
         token=os.getenv("HF_TOKEN"),
+        allow_patterns=dataset.get("allow_patterns"),
+        max_workers=int(dataset.get("download_workers", 8)),
     )
     return output_path
-

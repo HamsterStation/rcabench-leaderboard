@@ -3,6 +3,10 @@ name: Full benchmark
 on:
   workflow_dispatch:
     inputs:
+      benchmarks:
+        description: "Comma-separated benchmarks (fse,ops-lite) or all"
+        required: true
+        default: all
       algorithms:
         description: "Comma-separated algorithms or all"
         required: true
@@ -22,6 +26,9 @@ concurrency:
   group: full-benchmark
   cancel-in-progress: false
 
+env:
+  RCABENCH_STORAGE: ${{ vars.RCABENCH_STORAGE || '/mnt/jfs-fixed/rcabench-ci' }}
+
 jobs:
   evaluate:
     if: vars.BENCHMARK_ENABLED == 'true' && (github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success')
@@ -29,6 +36,7 @@ jobs:
       fail-fast: false
       max-parallel: 1
       matrix:
+        benchmark: [fse, ops-lite]
         algorithm: [baro, art, eadro, causalrca]
     runs-on: [self-hosted, linux, x64, rcabench]
     steps:
@@ -41,10 +49,20 @@ jobs:
         shell: bash
         run: |
           requested='${{ inputs.algorithms || 'all' }}'
-          if [[ "$requested" != "all" && ",$requested," != *",${{ matrix.algorithm }},"* ]]; then
+          benchmarks='${{ inputs.benchmarks || 'all' }}'
+          if [[ "$requested" != "all" && ",$requested," != *",${{ matrix.algorithm }},"* ]] || \
+             [[ "$benchmarks" != "all" && ",$benchmarks," != *",${{ matrix.benchmark }},"* ]]; then
             echo 'enabled=false' >> "$GITHUB_OUTPUT"
           else
             echo 'enabled=true' >> "$GITHUB_OUTPUT"
+          fi
+      - name: Resolve benchmark config
+        if: steps.select.outputs.enabled == 'true'
+        run: |
+          if [[ '${{ matrix.benchmark }}' == 'fse' ]]; then
+            echo 'BENCHMARK_CONFIG=config/benchmark.json' >> "$GITHUB_ENV"
+          else
+            echo 'BENCHMARK_CONFIG=config/ops-lite.json' >> "$GITHUB_ENV"
           fi
       - name: Install benchmark controller
         if: steps.select.outputs.enabled == 'true'
@@ -52,9 +70,9 @@ jobs:
       - name: Resolve versioned cache paths
         if: steps.select.outputs.enabled == 'true'
         run: |
-          REVISION=$(python -c 'import json; print(json.load(open("config/benchmark.json"))["dataset"]["revision"])')
+          REVISION=$(python -c 'import json,os; print(json.load(open(os.environ["BENCHMARK_CONFIG"]))["dataset"]["revision"])')
           SAFE_REVISION=$(printf '%s' "$REVISION" | tr -c 'A-Za-z0-9_.-' '-')
-          echo "DATASET_DIR=$HOME/.cache/rcabench/datasets/$SAFE_REVISION" >> "$GITHUB_ENV"
+          echo "DATASET_DIR=$RCABENCH_STORAGE/datasets/${{ matrix.benchmark }}-$SAFE_REVISION" >> "$GITHUB_ENV"
       - name: Log in to GHCR
         if: steps.select.outputs.enabled == 'true'
         uses: docker/login-action@v3
@@ -68,19 +86,23 @@ jobs:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
         run: |
           mkdir -p "$DATASET_DIR"
-          rcabench-leaderboard download --output "$DATASET_DIR"
+          rcabench-leaderboard download --config "$BENCHMARK_CONFIG" --output "$DATASET_DIR"
+      - name: Normalize OPS-Lite compatibility view
+        if: steps.select.outputs.enabled == 'true' && matrix.benchmark == 'ops-lite'
+        run: rcabench-leaderboard normalize-ops-lite --config "$BENCHMARK_CONFIG" --snapshot "$DATASET_DIR"
       - name: Pull algorithm image
         if: steps.select.outputs.enabled == 'true'
         run: |
-          IMAGE=$(python -c 'import json; print(json.load(open("config/benchmark.json"))["algorithms"]["${{ matrix.algorithm }}"]["image"])')
+          IMAGE=$(python -c 'import json,os; print(json.load(open(os.environ["BENCHMARK_CONFIG"]))["algorithms"]["${{ matrix.algorithm }}"]["image"])')
           docker pull "$IMAGE"
       - name: Prepare trained assets
         if: steps.select.outputs.enabled == 'true' && (matrix.algorithm == 'art' || matrix.algorithm == 'eadro')
         id: prepare
         run: |
           ASSETS=$(rcabench-leaderboard prepare '${{ matrix.algorithm }}' \
+            --config "$BENCHMARK_CONFIG" \
             --snapshot "$DATASET_DIR" \
-            --cache-root "$HOME/.cache/rcabench")
+            --cache-root "$RCABENCH_STORAGE/cache")
           echo "assets=$ASSETS" >> "$GITHUB_OUTPUT"
       - name: Evaluate algorithm
         if: steps.select.outputs.enabled == 'true'
@@ -89,12 +111,14 @@ jobs:
           if [[ -n '${{ steps.prepare.outputs.assets }}' ]]; then
             ASSET_ARGS=(--assets '${{ steps.prepare.outputs.assets }}')
           fi
-          RUN_ROOT="$HOME/rcabench-runs/${{ github.run_id }}/${{ matrix.algorithm }}"
+          RUN_ROOT="$RCABENCH_STORAGE/runs/${{ github.run_id }}/${{ matrix.benchmark }}/${{ matrix.algorithm }}"
           mkdir -p "$RUN_ROOT"
           rcabench-leaderboard run '${{ matrix.algorithm }}' \
+            --config "$BENCHMARK_CONFIG" \
             --snapshot "$DATASET_DIR" \
             --output "$RUN_ROOT/cases" "${ASSET_ARGS[@]}"
           rcabench-leaderboard evaluate '${{ matrix.algorithm }}' \
+            --config "$BENCHMARK_CONFIG" \
             --snapshot "$DATASET_DIR" \
             --results "$RUN_ROOT/cases" --output "$RUN_ROOT/metrics.json" \
             --require-complete
@@ -102,7 +126,7 @@ jobs:
       - uses: actions/upload-artifact@v4
         if: steps.select.outputs.enabled == 'true'
         with:
-          name: metrics-${{ matrix.algorithm }}
+          name: metrics-${{ matrix.benchmark }}-${{ matrix.algorithm }}
           path: metrics.json
           if-no-files-found: error
 
@@ -125,11 +149,16 @@ jobs:
       - name: Promote results
         run: |
           RUN_ID='github-${{ github.run_id }}-${{ github.run_attempt }}'
-          for algorithm in baro art eadro causalrca; do
-            metrics="collected/metrics-$algorithm/metrics.json"
-            [[ -f "$metrics" ]] || continue
-            rcabench-leaderboard record "$algorithm" --metrics "$metrics" --run-id "$RUN_ID" \
-              --archive "results/history/$RUN_ID/$algorithm.json"
+          for benchmark in fse ops-lite; do
+            config="config/benchmark.json"
+            [[ "$benchmark" == "ops-lite" ]] && config="config/ops-lite.json"
+            for algorithm in baro art eadro causalrca; do
+              metrics="collected/metrics-$benchmark-$algorithm/metrics.json"
+              [[ -f "$metrics" ]] || continue
+              rcabench-leaderboard record "$algorithm" --config "$config" \
+                --metrics "$metrics" --run-id "$RUN_ID" \
+                --archive "results/history/$RUN_ID/$benchmark/$algorithm.json"
+            done
           done
           rcabench-leaderboard build-site
       - name: Commit leaderboard update

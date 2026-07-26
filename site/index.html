@@ -19,7 +19,7 @@
 
     <main>
       <section class="hero">
-        <p class="eyebrow">FSE RCABench · fault + service balanced split</p>
+        <p class="eyebrow" id="benchmark-eyebrow">Reproducible multi-dataset evaluation</p>
         <h1>Root causes,<br><em>ranked in the open.</em></h1>
         <p class="lede">Every score is tied to a dataset revision, an algorithm commit, and an auditable run. No hand-copied tables.</p>
         <div class="dataset-stamp">
@@ -37,6 +37,7 @@
           </div>
           <div class="legend"><span class="dot"></span> delta versus paper, percentage points</div>
         </div>
+        <div class="benchmark-tabs" id="benchmark-tabs" aria-label="Choose benchmark"></div>
         <div class="table-wrap">
           <table>
             <thead>
@@ -77,4 +78,3 @@
     <script src="app.js"></script>
   </body>
 </html>
-

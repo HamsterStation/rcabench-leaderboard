@@ -10,6 +10,7 @@ from pathlib import Path
 from .config import dataset_path, load_config, manifest_path, read_manifest
 from .download import download_dataset
 from .evaluation import evaluate, write_metrics
+from .ops_lite import normalize_ops_lite
 from .prepare import prepare_assets
 from .records import build_site, record_metrics
 from .runner import run_benchmark
@@ -66,6 +67,19 @@ def command_doctor(args: argparse.Namespace) -> None:
 def command_download(args: argparse.Namespace) -> None:
     config = load_config(args.config)
     print(download_dataset(config, args.output))
+
+
+def command_normalize_ops_lite(args: argparse.Namespace) -> None:
+    config = load_config(args.config)
+    dataset = config["dataset"]
+    metadata = normalize_ops_lite(
+        args.snapshot,
+        expected_manifest_sha256=dataset.get("manifest_sha256"),
+        expected_cases=int(dataset["expected_cases"]["all"]),
+        test_size=int(dataset["expected_cases"]["test"]),
+        seed=int(dataset.get("split_seed", 42)),
+    )
+    print(json.dumps(metadata, indent=2))
 
 
 def command_prepare(args: argparse.Namespace) -> None:
@@ -165,6 +179,13 @@ def build_parser() -> argparse.ArgumentParser:
     _common_config(download)
     download.add_argument("--output", type=Path, required=True)
     download.set_defaults(function=command_download)
+
+    normalize = subparsers.add_parser(
+        "normalize-ops-lite", help="create an RCABench-compatible view and deterministic split"
+    )
+    _common_config(normalize)
+    normalize.add_argument("--snapshot", type=Path, required=True)
+    normalize.set_defaults(function=command_normalize_ops_lite)
 
     prepare = subparsers.add_parser("prepare", help="train/cache ART or Eadro assets")
     _common_config(prepare)

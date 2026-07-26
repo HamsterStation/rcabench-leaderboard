@@ -51,6 +51,9 @@ h1 em { color: var(--accent); font-weight: 600; }
 h2 { font-size: clamp(42px, 6vw, 76px); line-height: .95; }
 .legend { font: 11px "DM Mono", monospace; }
 .dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--accent); margin-right: 7px; }
+.benchmark-tabs { display: flex; flex-wrap: wrap; gap: 10px; margin: -10px 0 28px; }
+.benchmark-tabs button { padding: 10px 15px; border: 1px solid var(--ink); background: transparent; color: var(--ink); font: 500 11px "DM Mono", monospace; letter-spacing: .06em; text-transform: uppercase; cursor: pointer; }
+.benchmark-tabs button[aria-selected="true"] { background: var(--ink); color: var(--paper); }
 .table-wrap { overflow-x: auto; border-top: 2px solid var(--ink); border-bottom: 2px solid var(--ink); }
 table { width: 100%; min-width: 980px; border-collapse: collapse; }
 th { padding: 16px 12px; text-align: right; font: 500 10px "DM Mono", monospace; letter-spacing: .08em; text-transform: uppercase; border-bottom: 1px solid var(--ink); }
@@ -89,4 +92,3 @@ footer { padding: 26px 5vw; display: flex; justify-content: space-between; font:
   .protocol-grid { grid-template-columns: 1fr; }
   footer { padding: 24px 22px; gap: 20px; }
 }
-
