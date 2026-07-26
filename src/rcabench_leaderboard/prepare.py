@@ -121,15 +121,27 @@ def prepare_art(
     node_dictionary = art_data / "RCABENCH" / "node_dict.pkl"
     with node_dictionary.open("rb") as handle:
         instance_dim = len(pickle.load(handle))
+    metric_dictionary = art_data / "RCABENCH" / "metric_dict.pkl"
+    with metric_dictionary.open("rb") as handle:
+        metric_dim = len(pickle.load(handle))
     config_template = (repository_root / "config/art-fse.yaml").read_text()
     generated_config = state / "art-fse.generated.yaml"
-    generated_config.write_text(
-        re.sub(
-            r"(?m)^\s*instance_dim:\s*\d+\s*$",
-            f"    instance_dim: {instance_dim}",
-            config_template,
-        )
+    generated = re.sub(
+        r"(?m)^\s*instance_dim:\s*\d+\s*$",
+        f"    instance_dim: {instance_dim}",
+        config_template,
     )
+    generated = re.sub(
+        r"(?m)^\s*metric:\s*\d+\s*$",
+        f"    metric: {metric_dim}",
+        generated,
+    )
+    generated = re.sub(
+        r"(?m)^\s*channel_dim:\s*\d+\s*$",
+        f"    channel_dim: {metric_dim + 6}",
+        generated,
+    )
+    generated_config.write_text(generated)
 
     if not (model / "model.pkl").is_file():
         command = _docker_base(algorithm["image"], data_root)
