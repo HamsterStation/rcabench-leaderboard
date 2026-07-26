@@ -3,7 +3,6 @@ from __future__ import annotations
 import hashlib
 import json
 import math
-import os
 import random
 from collections import Counter, defaultdict
 from pathlib import Path
@@ -175,12 +174,24 @@ def _link_raw_files(raw_case: Path, converted: Path) -> None:
         if source.name in excluded:
             continue
         target = converted / source.name
-        relative = os.path.relpath(source, start=converted)
-        if target.is_symlink() and os.readlink(target) == relative:
-            continue
-        if target.exists() or target.is_symlink():
+        if target.exists() and not target.is_symlink():
+            source_stat = source.stat()
+            target_stat = target.stat()
+            if (source_stat.st_dev, source_stat.st_ino) == (
+                target_stat.st_dev,
+                target_stat.st_ino,
+            ):
+                continue
+        if target.is_symlink():
+            target.unlink()
+        elif target.exists():
             raise FileExistsError(f"refusing to replace unexpected normalized file: {target}")
-        target.symlink_to(relative)
+        try:
+            target.hardlink_to(source)
+        except OSError as exc:
+            raise OSError(
+                f"cannot create a hard-linked compatibility view for {source}: {exc}"
+            ) from exc
 
 
 def _distribution(records: list[dict[str, Any]], cases: set[str]) -> dict[str, Any]:

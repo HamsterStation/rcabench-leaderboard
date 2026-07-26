@@ -1,6 +1,10 @@
 import json
 
-from rcabench_leaderboard.ops_lite import _merge_ground_truth, iterative_train_test_split
+from rcabench_leaderboard.ops_lite import (
+    _link_raw_files,
+    _merge_ground_truth,
+    iterative_train_test_split,
+)
 
 
 def test_ground_truth_list_is_merged_without_duplicates():
@@ -33,3 +37,18 @@ def test_multilabel_split_is_deterministic_and_complete():
     assert len(test) == 2
     assert set(train).isdisjoint(test)
     assert set(train) | set(test) == {record["name"] for record in records}
+
+
+def test_compatibility_view_uses_hardlinks_visible_in_case_mount(tmp_path):
+    raw = tmp_path / "cases" / "case-a"
+    converted = tmp_path / "case-a" / "converted"
+    raw.mkdir(parents=True)
+    converted.mkdir(parents=True)
+    source = raw / "normal_metrics.parquet"
+    source.write_bytes(b"parquet-placeholder")
+
+    _link_raw_files(raw, converted)
+
+    target = converted / source.name
+    assert target.read_bytes() == source.read_bytes()
+    assert target.stat().st_ino == source.stat().st_ino
