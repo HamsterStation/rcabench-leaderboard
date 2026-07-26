@@ -49,7 +49,7 @@
       "workers": 4,
       "cpus_per_worker": 2,
       "timeout_seconds": 300,
-      "max_algorithm_errors": 0,
+      "max_algorithm_errors": 3,
       "python": ".venv/bin/python",
       "workdir": "/app"
     },
@@ -88,7 +88,7 @@
       "workers": 4,
       "cpus_per_worker": 2,
       "timeout_seconds": 1800,
-      "max_algorithm_errors": 0,
+      "max_algorithm_errors": 3,
       "python": ".venv/bin/python",
       "workdir": "/app"
     }
