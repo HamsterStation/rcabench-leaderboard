@@ -95,7 +95,18 @@ jobs:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
         run: |
           mkdir -p "$DATASET_DIR"
-          rcabench-leaderboard download --config "$BENCHMARK_CONFIG" --output "$DATASET_DIR"
+          for attempt in {1..12}; do
+            if rcabench-leaderboard download --config "$BENCHMARK_CONFIG" --output "$DATASET_DIR"; then
+              break
+            fi
+            if [[ "$attempt" -eq 12 ]]; then
+              echo "Dataset download failed after $attempt resumable attempts" >&2
+              exit 1
+            fi
+            delay=$((attempt * 15))
+            echo "Dataset download attempt $attempt failed; resuming in ${delay}s" >&2
+            sleep "$delay"
+          done
       - name: Normalize OPS-Lite compatibility view
         if: steps.select.outputs.enabled == 'true' && matrix.benchmark == 'ops-lite'
         run: rcabench-leaderboard normalize-ops-lite --config "$BENCHMARK_CONFIG" --snapshot "$DATASET_DIR"
