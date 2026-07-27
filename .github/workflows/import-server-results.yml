@@ -1,0 +1,94 @@
+name: Import server results
+
+on:
+  workflow_dispatch:
+    inputs:
+      run_root:
+        description: "Existing OPS-Lite run directory on the self-hosted runner"
+        required: true
+        default: /mnt/jfs-fixed/ops-lite-runs/seed42
+
+permissions:
+  contents: write
+
+jobs:
+  import:
+    runs-on: [self-hosted, linux, x64, rcabench]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate existing metrics
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          RUN_ROOT='${{ inputs.run_root }}'
+          PYTHON=/mnt/jfs-fixed/rcabench-venv/bin/python
+          [[ -x "$PYTHON" ]] || { echo "Missing Python: $PYTHON" >&2; exit 1; }
+          [[ -f "$RUN_ROOT/stage.txt" ]] || { echo "Missing stage.txt" >&2; exit 1; }
+          [[ "$(tr -d '[:space:]' < "$RUN_ROOT/stage.txt")" == complete ]] || {
+            echo "Existing run is not complete: $(cat "$RUN_ROOT/stage.txt")" >&2
+            exit 1
+          }
+
+          mkdir -p imported
+          for algorithm in baro art eadro causalrca; do
+            metrics="$RUN_ROOT/metrics/$algorithm.json"
+            [[ -s "$metrics" ]] || { echo "Missing metrics: $metrics" >&2; exit 1; }
+            "$PYTHON" - "$algorithm" "$metrics" <<'PY'
+          import json
+          import sys
+
+          algorithm, path = sys.argv[1:]
+          metrics = json.load(open(path))
+          expected = {"baro": 500, "art": 100, "eadro": 100, "causalrca": 500}
+          if metrics.get("requested_cases") != expected[algorithm]:
+              raise SystemExit(f"{algorithm}: unexpected requested_cases")
+          for key in ("missing_cases", "invalid_cases"):
+              if metrics.get(key, 0) != 0:
+                  raise SystemExit(f"{algorithm}: {key}={metrics[key]}")
+          for key in ("top@1", "top@3", "top@5", "avg@3", "avg@5", "mrr"):
+              value = metrics.get(key)
+              if not isinstance(value, (int, float)) or not 0 <= value <= 1:
+                  raise SystemExit(f"{algorithm}: invalid {key}={value!r}")
+          print(f"{algorithm}: validated {metrics['requested_cases']} cases")
+          PY
+            cp "$metrics" "imported/$algorithm.json"
+          done
+      - uses: actions/upload-artifact@v4
+        with:
+          name: existing-ops-lite-metrics
+          path: imported/*.json
+          if-no-files-found: error
+
+  collect:
+    needs: import
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python -m pip install -e .
+      - uses: actions/download-artifact@v4
+        with:
+          name: existing-ops-lite-metrics
+          path: imported
+      - name: Promote existing metrics
+        run: |
+          RUN_ID='server-import-${{ github.run_id }}-${{ github.run_attempt }}'
+          for algorithm in baro art eadro causalrca; do
+            metrics="imported/$algorithm.json"
+            archive="results/history/$RUN_ID/ops-lite/$algorithm.json"
+            rcabench-leaderboard record "$algorithm" --config config/ops-lite.json \
+              --metrics "$metrics" --run-id "$RUN_ID" --archive "$archive"
+          done
+          rcabench-leaderboard build-site
+      - name: Commit leaderboard update
+        run: |
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add results/leaderboard.json results/history
+          git commit -m 'results: import existing OPS-Lite run ${{ github.run_id }}'
+          git pull --rebase origin main
+          git push origin HEAD:main
