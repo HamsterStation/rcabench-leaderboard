@@ -23,17 +23,20 @@ original dataset redistribution terms have been confirmed.
 1. `config/algorithms.json` registers 12 algorithms and nine immutable images;
    `config/datasets.json` registers datasets. Each dataset config pins its
    revision, split sizes, resources, and error tolerances.
-2. `build-images.yml` builds Linux/AMD64 images from the exact upstream commits
-   and pushes them to GHCR.
-3. `benchmark.yml` generates its matrix from both registries and runs every
-   registered algorithm sequentially on the self-hosted server.
+2. A new algorithm or dataset is proposed as a PR. `benchmark-pr.yml` detects
+   only the affected algorithm × dataset pairs, builds candidate Linux/AMD64
+   images, and evaluates them on the self-hosted server before merge.
+3. Successful metrics are committed back to the PR and the bot squash-merges
+   it automatically. Failed or incomplete evaluations remain open and cannot
+   replace leaderboard values. `benchmark.yml` remains available for manual
+   full or selected reruns.
 4. ART and Eadro training outputs are cached by algorithm commit. A new data
    revision uses a fresh cache and retrains them.
 5. Each datapack has an isolated log and atomic `result.json`; interrupted runs
    resume from existing valid result files.
 6. `dataset-watch.yml` checks trusted Hugging Face repositories daily. A new
-   revision regenerates deterministic splits, passes tests, is merged through
-   an auditable PR, and queues the complete evaluation matrix.
+   revision regenerates deterministic splits and opens an auditable evaluation
+   PR; the same PR gate runs metrics before automatic merge.
 7. Metrics are validated, archived under `results/history/`, promoted to
    `results/leaderboard.json`, and deployed by `pages.yml`.
 

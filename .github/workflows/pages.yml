@@ -9,7 +9,7 @@ on:
       - .github/workflows/pages.yml
   workflow_dispatch:
   workflow_run:
-    workflows: [Full benchmark, Import server results]
+    workflows: [Full benchmark, Import server results, Evaluate benchmark PR]
     types: [completed]
     branches: [main]
 

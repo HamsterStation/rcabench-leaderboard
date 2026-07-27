@@ -13,10 +13,6 @@ on:
         default: all
   repository_dispatch:
     types: [dataset-updated, algorithm-updated]
-  workflow_run:
-    workflows: [Build algorithm images]
-    types: [completed]
-    branches: [main]
 
 permissions:
   contents: write
@@ -31,7 +27,7 @@ env:
 
 jobs:
   plan:
-    if: vars.BENCHMARK_ENABLED == 'true' && (github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success')
+    if: vars.BENCHMARK_ENABLED == 'true'
     runs-on: ubuntu-latest
     outputs:
       matrix: ${{ steps.matrix.outputs.matrix }}

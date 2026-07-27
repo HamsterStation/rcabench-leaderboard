@@ -1,0 +1,236 @@
+name: Evaluate benchmark PR
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+    paths:
+      - config/**
+      - containers/**
+      - src/**
+      - scripts/**
+  workflow_dispatch:
+    inputs:
+      pr_number:
+        description: "PR number created by an automation watcher"
+        required: true
+        type: number
+
+permissions:
+  contents: write
+  packages: write
+  pull-requests: write
+
+concurrency:
+  group: benchmark-pr-${{ github.event.pull_request.number || inputs.pr_number }}
+  cancel-in-progress: true
+
+env:
+  RCABENCH_STORAGE: ${{ vars.RCABENCH_STORAGE || '/mnt/jfs-fixed/rcabench-ci' }}
+
+jobs:
+  metadata:
+    runs-on: ubuntu-latest
+    outputs:
+      number: ${{ steps.pr.outputs.number }}
+      base_sha: ${{ steps.pr.outputs.base_sha }}
+      head_sha: ${{ steps.pr.outputs.head_sha }}
+      head_ref: ${{ steps.pr.outputs.head_ref }}
+      head_repo: ${{ steps.pr.outputs.head_repo }}
+    steps:
+      - id: pr
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_NUMBER: ${{ github.event.pull_request.number || inputs.pr_number }}
+        run: |
+          PR=$(gh api "repos/${{ github.repository }}/pulls/$PR_NUMBER")
+          echo "number=$PR_NUMBER" >> "$GITHUB_OUTPUT"
+          echo "base_sha=$(jq -r .base.sha <<< "$PR")" >> "$GITHUB_OUTPUT"
+          echo "head_sha=$(jq -r .head.sha <<< "$PR")" >> "$GITHUB_OUTPUT"
+          echo "head_ref=$(jq -r .head.ref <<< "$PR")" >> "$GITHUB_OUTPUT"
+          echo "head_repo=$(jq -r .head.repo.full_name <<< "$PR")" >> "$GITHUB_OUTPUT"
+
+  plan:
+    needs: metadata
+    if: vars.BENCHMARK_ENABLED == 'true' && needs.metadata.outputs.head_repo == github.repository
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.plan.outputs.matrix }}
+      images: ${{ steps.plan.outputs.images }}
+      has_work: ${{ steps.plan.outputs.has_work }}
+      has_images: ${{ steps.plan.outputs.has_images }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ needs.metadata.outputs.head_sha }}
+      - id: plan
+        env:
+          BASE_SHA: ${{ needs.metadata.outputs.base_sha }}
+        run: |
+          REPORT=$(PYTHONPATH=src python scripts/plan_pr_benchmark.py --base "$BASE_SHA")
+          echo "$REPORT" | jq .
+          echo "matrix=$(jq -c .matrix <<< "$REPORT")" >> "$GITHUB_OUTPUT"
+          echo "images=$(jq -c .images <<< "$REPORT")" >> "$GITHUB_OUTPUT"
+          echo "has_work=$(jq -r .has_work <<< "$REPORT")" >> "$GITHUB_OUTPUT"
+          echo "has_images=$(jq -r '(.images | length) > 0' <<< "$REPORT")" >> "$GITHUB_OUTPUT"
+
+  build:
+    needs: plan
+    if: needs.plan.outputs.has_images == 'true'
+    strategy:
+      fail-fast: false
+      max-parallel: 2
+      matrix:
+        include: ${{ fromJSON(needs.plan.outputs.images) }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Reclaim runner disk for ML images
+        run: |
+          sudo rm -rf /usr/local/lib/android /usr/share/dotnet /opt/ghc
+          sudo rm -rf /opt/hostedtoolcache/CodeQL
+          docker system prune --all --force --volumes
+      - name: Fetch immutable algorithm source
+        run: |
+          git init algorithm
+          git -C algorithm remote add origin '${{ matrix.source }}'
+          git -C algorithm fetch --depth=1 origin '${{ matrix.commit }}'
+          git -C algorithm checkout --detach FETCH_HEAD
+          test "$(git -C algorithm rev-parse HEAD)" = '${{ matrix.commit }}'
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - uses: docker/build-push-action@v6
+        with:
+          context: algorithm
+          push: true
+          platforms: linux/amd64
+          tags: ${{ matrix.image }}
+          cache-from: type=gha,scope=${{ matrix.name }}
+          cache-to: type=gha,mode=min,scope=${{ matrix.name }}
+          provenance: true
+          sbom: true
+
+  evaluate:
+    needs: [metadata, plan, build]
+    if: always() && needs.plan.outputs.has_work == 'true' && (needs.build.result == 'success' || needs.build.result == 'skipped')
+    strategy:
+      fail-fast: false
+      max-parallel: 1
+      matrix:
+        include: ${{ fromJSON(needs.plan.outputs.matrix) }}
+    runs-on: [self-hosted, linux, x64, rcabench]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up runner Python
+        shell: bash
+        run: |
+          BASE_PYTHON='${{ vars.RCABENCH_PYTHON || '/mnt/jfs-fixed/rcabench-venv/bin/python' }}'
+          [[ -x "$BASE_PYTHON" ]] || { echo "Missing Python: $BASE_PYTHON" >&2; exit 1; }
+          "$BASE_PYTHON" -m venv "$RUNNER_TEMP/rcabench-venv"
+          echo "$RUNNER_TEMP/rcabench-venv/bin" >> "$GITHUB_PATH"
+      - run: python -m pip install -e .
+      - name: Resolve dataset cache
+        env:
+          BENCHMARK_CONFIG: ${{ matrix.config }}
+        run: |
+          REVISION=$(python -c 'import os; from rcabench_leaderboard.config import load_config; print(load_config(os.environ["BENCHMARK_CONFIG"])["dataset"]["revision"])')
+          SAFE_REVISION=$(printf '%s' "$REVISION" | tr -c 'A-Za-z0-9_.-' '-')
+          echo "BENCHMARK_CONFIG=${{ matrix.config }}" >> "$GITHUB_ENV"
+          echo "DATASET_DIR=$RCABENCH_STORAGE/datasets/${{ matrix.benchmark }}-$SAFE_REVISION" >> "$GITHUB_ENV"
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Download pinned dataset
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        run: |
+          mkdir -p "$DATASET_DIR"
+          for attempt in {1..12}; do
+            rcabench-leaderboard download --config "$BENCHMARK_CONFIG" --output "$DATASET_DIR" && break
+            [[ "$attempt" -lt 12 ]] || exit 1
+            sleep $((attempt * 15))
+          done
+      - name: Normalize OPS-Lite
+        if: matrix.benchmark == 'ops-lite'
+        run: rcabench-leaderboard normalize-ops-lite --config "$BENCHMARK_CONFIG" --snapshot "$DATASET_DIR"
+      - name: Pull algorithm image
+        run: |
+          IMAGE=$(python -c 'import os; from rcabench_leaderboard.config import load_config; print(load_config(os.environ["BENCHMARK_CONFIG"])["algorithms"]["${{ matrix.algorithm }}"]["image"])')
+          docker pull "$IMAGE"
+      - name: Prepare trained assets
+        if: matrix.prepare
+        id: prepare
+        run: |
+          ASSETS=$(rcabench-leaderboard prepare '${{ matrix.algorithm }}' \
+            --config "$BENCHMARK_CONFIG" --snapshot "$DATASET_DIR" \
+            --cache-root "$RCABENCH_STORAGE/cache")
+          echo "assets=$ASSETS" >> "$GITHUB_OUTPUT"
+      - name: Run and score
+        run: |
+          ASSET_ARGS=()
+          [[ -z '${{ steps.prepare.outputs.assets }}' ]] || ASSET_ARGS=(--assets '${{ steps.prepare.outputs.assets }}')
+          RUN_ROOT="$RCABENCH_STORAGE/runs/pr-${{ needs.metadata.outputs.number }}/${{ needs.metadata.outputs.head_sha }}/${{ matrix.benchmark }}/${{ matrix.algorithm }}"
+          mkdir -p "$RUN_ROOT"
+          rcabench-leaderboard run '${{ matrix.algorithm }}' \
+            --config "$BENCHMARK_CONFIG" --snapshot "$DATASET_DIR" \
+            --output "$RUN_ROOT/cases" "${ASSET_ARGS[@]}"
+          rcabench-leaderboard evaluate '${{ matrix.algorithm }}' \
+            --config "$BENCHMARK_CONFIG" --snapshot "$DATASET_DIR" \
+            --results "$RUN_ROOT/cases" --output "$RUN_ROOT/metrics.json" --require-complete
+          cp "$RUN_ROOT/metrics.json" metrics.json
+      - uses: actions/upload-artifact@v4
+        with:
+          name: pr-metrics-${{ matrix.benchmark }}-${{ matrix.algorithm }}
+          path: metrics.json
+          if-no-files-found: error
+
+  collect-and-merge:
+    needs: [metadata, plan, evaluate]
+    if: needs.evaluate.result == 'success'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.metadata.outputs.head_ref }}
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python -m pip install -e .
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: pr-metrics-*
+          path: collected
+      - name: Add validated metrics to the PR
+        env:
+          MATRIX: ${{ needs.plan.outputs.matrix }}
+        run: |
+          RUN_ID='pr-${{ needs.metadata.outputs.number }}-${{ needs.metadata.outputs.head_sha }}'
+          while IFS= read -r row; do
+            benchmark=$(jq -r .benchmark <<< "$row")
+            algorithm=$(jq -r .algorithm <<< "$row")
+            config=$(jq -r .config <<< "$row")
+            metrics="collected/pr-metrics-$benchmark-$algorithm/metrics.json"
+            rcabench-leaderboard record "$algorithm" --config "$config" \
+              --metrics "$metrics" --run-id "$RUN_ID" \
+              --archive "results/history/$RUN_ID/$benchmark/$algorithm.json"
+          done < <(jq -c '.[]' <<< "$MATRIX")
+          rcabench-leaderboard build-site
+      - name: Commit metrics and merge the PR
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          HEAD_REF: ${{ needs.metadata.outputs.head_ref }}
+        run: |
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add results/leaderboard.json results/history
+          git commit -m 'results: attach validated PR metrics [skip ci]'
+          git pull --rebase origin "$HEAD_REF"
+          git push origin HEAD:"$HEAD_REF"
+          gh pr merge '${{ needs.metadata.outputs.number }}' --repo '${{ github.repository }}' \
+            --squash --delete-branch

@@ -34,13 +34,8 @@ jobs:
             Merging this PR builds new immutable containers and queues a full
             benchmark on the self-hosted runner.
           labels: algorithm-update,benchmark
-      - name: Merge validated trusted upstream pins
-        if: steps.pr.outputs.pull-request-number != ''
+      - name: Evaluate the algorithm PR
+        if: steps.pr.outputs.pull-request-operation == 'created' || steps.pr.outputs.pull-request-operation == 'updated'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: gh pr merge '${{ steps.pr.outputs.pull-request-number }}' --squash --delete-branch
-      - name: Build new images
-        if: steps.pr.outputs.pull-request-number != ''
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: gh workflow run build-images.yml --ref main
+        run: gh workflow run benchmark-pr.yml --ref main -f pr_number='${{ steps.pr.outputs.pull-request-number }}'

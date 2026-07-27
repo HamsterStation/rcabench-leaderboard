@@ -6,6 +6,7 @@ on:
   workflow_dispatch:
 
 permissions:
+  actions: write
   contents: write
   pull-requests: write
 
@@ -42,17 +43,8 @@ jobs:
             Automated update from a trusted dataset registered in `config/datasets.json`.
             Revision metadata and deterministic split manifests passed repository tests.
           labels: dataset-update,benchmark
-      - name: Merge validated trusted dataset update
-        if: steps.pr.outputs.pull-request-number != ''
+      - name: Evaluate the dataset PR
+        if: steps.pr.outputs.pull-request-operation == 'created' || steps.pr.outputs.pull-request-operation == 'updated'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: gh pr merge '${{ steps.pr.outputs.pull-request-number }}' --squash --delete-branch
-      - name: Queue affected benchmark matrix
-        if: steps.pr.outputs.pull-request-number != ''
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          gh api --method POST repos/${{ github.repository }}/dispatches \
-            -f event_type=dataset-updated \
-            -f 'client_payload[benchmarks]=${{ steps.pin.outputs.benchmarks }}' \
-            -f 'client_payload[algorithms]=all'
+        run: gh workflow run benchmark-pr.yml --ref main -f pr_number='${{ steps.pr.outputs.pull-request-number }}'
