@@ -6,11 +6,11 @@ on:
       benchmarks:
         description: "Comma-separated benchmarks (fse,ops-lite) or all"
         required: true
-        default: all
+        default: ops-lite
       algorithms:
         description: "Comma-separated algorithms or all"
         required: true
-        default: all
+        default: baro
   repository_dispatch:
     types: [dataset-updated, algorithm-updated]
   workflow_run:
@@ -41,9 +41,6 @@ jobs:
     runs-on: [self-hosted, linux, x64, rcabench]
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with:
-          python-version: "3.12"
       - name: Select algorithm
         id: select
         shell: bash
@@ -56,6 +53,18 @@ jobs:
           else
             echo 'enabled=true' >> "$GITHUB_OUTPUT"
           fi
+      - name: Set up runner Python
+        if: steps.select.outputs.enabled == 'true'
+        shell: bash
+        run: |
+          BASE_PYTHON='${{ vars.RCABENCH_PYTHON || '/mnt/jfs-fixed/rcabench-venv/bin/python' }}'
+          if [[ ! -x "$BASE_PYTHON" ]]; then
+            echo "Python is unavailable at $BASE_PYTHON" >&2
+            exit 1
+          fi
+          "$BASE_PYTHON" -m venv "$RUNNER_TEMP/rcabench-venv"
+          echo "$RUNNER_TEMP/rcabench-venv/bin" >> "$GITHUB_PATH"
+          "$RUNNER_TEMP/rcabench-venv/bin/python" --version
       - name: Resolve benchmark config
         if: steps.select.outputs.enabled == 'true'
         run: |
