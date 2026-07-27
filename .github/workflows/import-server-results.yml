@@ -16,7 +16,7 @@ jobs:
     runs-on: [self-hosted, linux, x64, rcabench]
     steps:
       - uses: actions/checkout@v4
-      - name: Validate existing metrics
+      - name: Resume and validate existing metrics
         shell: bash
         run: |
           set -Eeuo pipefail
@@ -24,6 +24,14 @@ jobs:
           PYTHON=/mnt/jfs-fixed/rcabench-venv/bin/python
           [[ -x "$PYTHON" ]] || { echo "Missing Python: $PYTHON" >&2; exit 1; }
           [[ -f "$RUN_ROOT/stage.txt" ]] || { echo "Missing stage.txt" >&2; exit 1; }
+          if [[ "$(tr -d '[:space:]' < "$RUN_ROOT/stage.txt")" != complete ]]; then
+            echo "Resuming existing run from stage: $(cat "$RUN_ROOT/stage.txt")"
+            REPO="$GITHUB_WORKSPACE" \
+              PYTHON_ENV=/mnt/jfs-fixed/rcabench-venv \
+              SNAPSHOT=/mnt/jfs-fixed/ops-lite-9ac09981 \
+              RUN_ROOT="$RUN_ROOT" \
+              bash scripts/run_ops_lite_server.sh
+          fi
           [[ "$(tr -d '[:space:]' < "$RUN_ROOT/stage.txt")" == complete ]] || {
             echo "Existing run is not complete: $(cat "$RUN_ROOT/stage.txt")" >&2
             exit 1
