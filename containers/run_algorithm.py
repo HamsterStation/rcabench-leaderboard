@@ -18,6 +18,14 @@ ALGORITHMS = {
     "causalrca": ("rcaeval_causalrca.causalrca", "CausalRCA"),
     "art": ("main", "ART"),
     "eadro": ("main", "Eadro"),
+    "diagfusion": ("src.diagfusion.DiagfusionClass", "diagfusion"),
+    "microdig": ("src.microdig", "MicroDig"),
+    "microhecl": ("src.shapleyiq.platform.algorithms", "MicroHECL"),
+    "microrank": ("src.shapleyiq.platform.algorithms", "MicroRank"),
+    "microrca": ("src.shapleyiq.platform.algorithms", "MicroRCA"),
+    "nezha": ("src.nezha.rcabench_adapter", "NezhaAlgorithm"),
+    "shapleyiq": ("src.shapleyiq.platform.algorithms", "ShapleyRCA"),
+    "simplerca": ("src.simplerca.nezha_rca", "NezhaRCA"),
 }
 
 
@@ -61,8 +69,7 @@ def main() -> None:
         "status": status,
         "error": error,
         "answers": [
-            {"level": answer.level, "name": answer.name, "rank": answer.rank}
-            for answer in answers
+            {"level": answer.level, "name": answer.name, "rank": answer.rank} for answer in answers
         ],
     }
     temporary = args.output / "result.json.tmp"

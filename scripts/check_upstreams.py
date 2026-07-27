@@ -19,25 +19,24 @@ def remote_head(source: str) -> str:
 
 def main() -> None:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--config", type=Path, default=Path("config/benchmark.json"))
+    parser.add_argument("--registry", type=Path, default=Path("config/algorithms.json"))
     parser.add_argument("--apply", action="store_true")
     args = parser.parse_args()
 
-    config = json.loads(args.config.read_text())
+    registry = json.loads(args.registry.read_text())
     updates = []
-    for name, algorithm in config["algorithms"].items():
-        head = remote_head(algorithm["source"])
-        if head == algorithm["commit"]:
+    for name, image in registry["images"].items():
+        head = remote_head(image["source"])
+        if head == image["commit"]:
             continue
-        updates.append({"algorithm": name, "before": algorithm["commit"], "after": head})
+        updates.append({"image": name, "before": image["commit"], "after": head})
         if args.apply:
-            algorithm["commit"] = head
-            algorithm["image"] = f"ghcr.io/hamsterstation/rcabench-{name}:{head[:8]}"
+            image["commit"] = head
+            image["image"] = f"ghcr.io/hamsterstation/rcabench-{name}:{head[:8]}"
     if args.apply and updates:
-        args.config.write_text(json.dumps(config, indent=2) + "\n")
+        args.registry.write_text(json.dumps(registry, indent=2) + "\n")
     print(json.dumps({"updates": updates}, indent=2))
 
 
 if __name__ == "__main__":
     main()
-

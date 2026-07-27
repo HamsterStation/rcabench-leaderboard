@@ -110,7 +110,7 @@ fault × service。原始 `cases/` 不会被修改。多根因样本评测时任
 命中都算命中；ART/Eadro 的公开预处理代码只支持单标签，因此训练时使用
 `ground_truth` 中第一个 service，这项限制会记录在 split metadata 中。
 
-服务器上一键断点续跑四种算法：
+服务器上一键断点续跑注册表中的全部 12 种算法：
 
 ```bash
 nohup bash scripts/run_ops_lite_server.sh \
@@ -143,14 +143,15 @@ gh api --method POST \
 
 ## 3. 算法更新
 
-`Watch algorithm upstreams` 每天读取四个上游仓库的默认分支 HEAD。发现
-更新时只创建 PR，不直接替换基准版本。合并 PR 后：
+`Watch algorithm upstreams` 每天读取九个上游镜像仓库的默认分支 HEAD。发现
+更新时会更新固定 commit、运行仓库测试，并通过留痕 PR 自动合并。随后：
 
 1. 构建新 commit 对应的不可变 GHCR 镜像；
 2. `Build algorithm images` 成功后自动排队执行全量评测；
 3. 结果验证通过后更新排行榜和 GitHub Pages。
 
-这种方式避免上游一次错误提交直接污染正式排行榜。
+新镜像或评测失败时不会覆盖对应的正式指标；成功算法的指标仍可独立发布。
+这些仓库属于显式登记的受信任来源；任意陌生算法不会自动执行。
 
 ## 4. 失败恢复
 
@@ -168,10 +169,22 @@ Actions 页面重新执行 workflow。不要删除已有 case 结果和训练 ca
 
 新增算法需要：
 
-1. 在 `config/benchmark.json` 增加 source、commit、image、scope 和资源限制；
+1. 在 `config/algorithms.json` 增加 source、commit、image、scope 和资源限制；
 2. 在 `containers/run_algorithm.py` 注册上游 Algorithm 类；
 3. 如需训练，在 `prepare.py` 增加可缓存的训练适配器；
 4. 增加最小单元测试；
-5. 将算法名加入 `benchmark.yml` matrix。
+5. 无需手改 workflow matrix；注册表校验通过后会自动进入所有已登记数据集。
 
 所有算法最终必须输出统一的 service 级别排名，评估和网页部分无需单独修改。
+
+## 6. 自动数据更新边界
+
+`Watch registered datasets` 每天检查 `config/datasets.json` 中受信任的 Hugging
+Face 仓库。已有数据集的新 revision 会自动固定到 commit SHA；OPS-Lite 会按同一
+seed 重新生成 fault、service 与 fault × service 分层的 train/test 清单，通过测试
+后自动合并并启动 12 算法评测，最终更新 Pages。
+
+“任意新数据集”仍需先登记一次：新增数据集配置，并提供把其原始格式转换成
+RCABench `converted/` 结构的适配器。之后该数据集的新版本才会全自动运行。这样
+可以避免把未知格式或不可信数据直接送进服务器容器。DiagFusion 当前使用上游
+仓库内置 checkpoint；若要在新数据上做严格无泄漏比较，还需补训练适配器。

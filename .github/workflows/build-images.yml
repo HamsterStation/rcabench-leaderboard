@@ -5,7 +5,7 @@ on:
   push:
     branches: [main]
     paths:
-      - config/benchmark.json
+      - config/algorithms.json
       - .github/workflows/build-images.yml
 
 permissions:
@@ -16,13 +16,13 @@ jobs:
   matrix:
     runs-on: ubuntu-latest
     outputs:
-      algorithms: ${{ steps.read.outputs.algorithms }}
+      images: ${{ steps.read.outputs.images }}
     steps:
       - uses: actions/checkout@v4
       - id: read
         run: |
-          MATRIX=$(jq -c '[.algorithms | to_entries[] | {name: .key, source: .value.source, commit: .value.commit, tag: .value.commit[0:8]}]' config/benchmark.json)
-          echo "algorithms=$MATRIX" >> "$GITHUB_OUTPUT"
+          IMAGES=$(PYTHONPATH=src python -m rcabench_leaderboard.matrix images)
+          echo "images=$IMAGES" >> "$GITHUB_OUTPUT"
 
   build:
     needs: matrix
@@ -30,7 +30,7 @@ jobs:
       fail-fast: false
       max-parallel: 2
       matrix:
-        include: ${{ fromJSON(needs.matrix.outputs.algorithms) }}
+        include: ${{ fromJSON(needs.matrix.outputs.images) }}
     runs-on: ubuntu-latest
     steps:
       - name: Reclaim runner disk for ML images
@@ -57,7 +57,7 @@ jobs:
           context: algorithm
           push: true
           platforms: linux/amd64
-          tags: ghcr.io/hamsterstation/rcabench-${{ matrix.name }}:${{ matrix.tag }}
+          tags: ${{ matrix.image }}
           cache-from: type=gha,scope=${{ matrix.name }}
           cache-to: type=gha,mode=min,scope=${{ matrix.name }}
           provenance: true

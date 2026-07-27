@@ -232,6 +232,7 @@ def normalize_ops_lite(
     seed: int = 42,
     pinned_train_manifest: str | Path | None = None,
     pinned_test_manifest: str | Path | None = None,
+    source_revision: str | None = None,
 ) -> dict[str, Any]:
     root = Path(snapshot).resolve()
     manifest_path = root / "manifest.jsonl"
@@ -291,7 +292,7 @@ def normalize_ops_lite(
 
     metadata = {
         "schema_version": 1,
-        "source_revision": "9ac09981c08ab02a0b923eab7830d778934851a8",
+        "source_revision": source_revision,
         "manifest_sha256": digest,
         "seed": seed,
         "strategy": strategy,

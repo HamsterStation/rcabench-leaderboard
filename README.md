@@ -1,7 +1,7 @@
 # RCABench Leaderboard
 
-Reproducible CI/CD for BARO, ART, Eadro, and CausalRCA on FSE RCABench and
-OPS-Lite. The repository pins every algorithm commit and dataset revision,
+Reproducible CI/CD for all 12 algorithms reported by the FSE paper on FSE
+RCABench and OPS-Lite. The repository pins every algorithm commit and dataset revision,
 executes each datapack in Docker, calculates one canonical metric schema, and
 publishes the latest results as a static leaderboard.
 
@@ -20,19 +20,28 @@ original dataset redistribution terms have been confirmed.
 
 ## Pipeline
 
-1. `config/benchmark.json` pins the data revision, split sizes, algorithm
-   commits, images, resources, and error tolerances.
-   `config/ops-lite.json` independently pins the public OPS-Lite benchmark.
+1. `config/algorithms.json` registers 12 algorithms and nine immutable images;
+   `config/datasets.json` registers datasets. Each dataset config pins its
+   revision, split sizes, resources, and error tolerances.
 2. `build-images.yml` builds Linux/AMD64 images from the exact upstream commits
    and pushes them to GHCR.
-3. `benchmark.yml` downloads the pinned Hugging Face snapshot and runs the four
-   algorithms sequentially on the self-hosted server.
+3. `benchmark.yml` generates its matrix from both registries and runs every
+   registered algorithm sequentially on the self-hosted server.
 4. ART and Eadro training outputs are cached by algorithm commit. A new data
    revision uses a fresh cache and retrains them.
 5. Each datapack has an isolated log and atomic `result.json`; interrupted runs
    resume from existing valid result files.
-6. Metrics are validated, archived under `results/history/`, promoted to
+6. `dataset-watch.yml` checks trusted Hugging Face repositories daily. A new
+   revision regenerates deterministic splits, passes tests, is merged through
+   an auditable PR, and queues the complete evaluation matrix.
+7. Metrics are validated, archived under `results/history/`, promoted to
    `results/leaderboard.json`, and deployed by `pages.yml`.
+
+The registry contains BARO, ART, Eadro, CausalRCA, DiagFusion, MicroDig,
+MicroHECL, MicroRank, MicroRCA, Nezha, ShapleyIQ, and SimpleRCA. DiagFusion's
+released container uses its bundled checkpoint; those rows are marked with
+that checkpoint policy and should not be described as leakage-free retraining
+on a newly added dataset until a training adapter is implemented.
 
 ## Local commands
 

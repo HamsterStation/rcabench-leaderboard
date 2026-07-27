@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "datasets": {
+    "fse": {
+      "config": "benchmark.json",
+      "watch": true,
+      "update_adapter": "fse"
+    },
+    "ops-lite": {
+      "config": "ops-lite.json",
+      "watch": true,
+      "update_adapter": "ops-lite"
+    }
+  }
+}

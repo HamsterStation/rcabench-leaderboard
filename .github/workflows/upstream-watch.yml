@@ -6,6 +6,7 @@ on:
   workflow_dispatch:
 
 permissions:
+  actions: write
   contents: write
   pull-requests: write
 
@@ -14,8 +15,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python -m pip install -e '.[dev]'
       - run: python scripts/check_upstreams.py --apply
-      - uses: peter-evans/create-pull-request@v7
+      - run: pytest -q
+      - id: pr
+        uses: peter-evans/create-pull-request@v7
         with:
           branch: automation/update-algorithm-pins
           delete-branch: true
@@ -27,4 +34,13 @@ jobs:
             Merging this PR builds new immutable containers and queues a full
             benchmark on the self-hosted runner.
           labels: algorithm-update,benchmark
-
+      - name: Merge validated trusted upstream pins
+        if: steps.pr.outputs.pull-request-number != ''
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh pr merge '${{ steps.pr.outputs.pull-request-number }}' --squash --delete-branch
+      - name: Build new images
+        if: steps.pr.outputs.pull-request-number != ''
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh workflow run build-images.yml --ref main

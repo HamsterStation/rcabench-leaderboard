@@ -28,6 +28,14 @@ def _snapshot_cases(config, snapshot: Path, split: str, limit: int | None = None
     return cases[:limit] if limit else cases
 
 
+def _algorithm(config, name: str):
+    try:
+        return config["algorithms"][name]
+    except KeyError as exc:
+        available = ", ".join(sorted(config["algorithms"]))
+        raise ValueError(f"unknown algorithm {name!r}; available: {available}") from exc
+
+
 def command_validate(args: argparse.Namespace) -> None:
     config = load_config(args.config)
     print(
@@ -52,12 +60,15 @@ def command_doctor(args: argparse.Namespace) -> None:
         "hf_token": bool(__import__("os").getenv("HF_TOKEN")),
     }
     if checks["docker_cli"]:
-        checks["docker_daemon"] = subprocess.run(
-            ["docker", "info"],
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.DEVNULL,
-            check=False,
-        ).returncode == 0
+        checks["docker_daemon"] = (
+            subprocess.run(
+                ["docker", "info"],
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+                check=False,
+            ).returncode
+            == 0
+        )
     checks["algorithms"] = sorted(config["algorithms"])
     print(json.dumps(checks, indent=2))
     if not checks["docker_daemon"]:
@@ -82,12 +93,17 @@ def command_normalize_ops_lite(args: argparse.Namespace) -> None:
         seed=int(dataset.get("split_seed", 42)),
         pinned_train_manifest=config_root / pinned["train"] if pinned else None,
         pinned_test_manifest=config_root / pinned["test"] if pinned else None,
+        source_revision=dataset["revision"],
     )
     print(json.dumps(metadata, indent=2))
 
 
 def command_prepare(args: argparse.Namespace) -> None:
     config = load_config(args.config)
+    algorithm = _algorithm(config, args.algorithm)
+    if not algorithm.get("preparation"):
+        print("none")
+        return
     snapshot = args.snapshot.resolve()
     train_cases = _snapshot_cases(config, snapshot, "train")
     test_cases = _snapshot_cases(config, snapshot, "test")
@@ -105,7 +121,7 @@ def command_prepare(args: argparse.Namespace) -> None:
 
 def command_run(args: argparse.Namespace) -> None:
     config = load_config(args.config)
-    algorithm = config["algorithms"][args.algorithm]
+    algorithm = _algorithm(config, args.algorithm)
     snapshot = args.snapshot.resolve()
     split = args.split or algorithm["scope"]
     cases = _snapshot_cases(config, snapshot, split, args.limit)
@@ -126,7 +142,7 @@ def command_run(args: argparse.Namespace) -> None:
 
 def command_evaluate(args: argparse.Namespace) -> None:
     config = load_config(args.config)
-    algorithm = config["algorithms"][args.algorithm]
+    algorithm = _algorithm(config, args.algorithm)
     snapshot = args.snapshot.resolve()
     split = args.split or algorithm["scope"]
     cases = _snapshot_cases(config, snapshot, split, args.limit)
@@ -150,6 +166,7 @@ def command_evaluate(args: argparse.Namespace) -> None:
 
 def command_record(args: argparse.Namespace) -> None:
     config = load_config(args.config)
+    _algorithm(config, args.algorithm)
     entry = record_metrics(
         leaderboard_path=args.leaderboard,
         metrics_path=args.metrics,
@@ -193,7 +210,7 @@ def build_parser() -> argparse.ArgumentParser:
 
     prepare = subparsers.add_parser("prepare", help="train/cache ART or Eadro assets")
     _common_config(prepare)
-    prepare.add_argument("algorithm", choices=("art", "eadro"))
+    prepare.add_argument("algorithm")
     prepare.add_argument("--snapshot", type=Path, required=True)
     prepare.add_argument("--cache-root", type=Path, default=Path(".cache"))
     prepare.add_argument("--repository-root", type=Path, default=Path.cwd())
@@ -201,7 +218,7 @@ def build_parser() -> argparse.ArgumentParser:
 
     run = subparsers.add_parser("run", help="run an algorithm over a manifest")
     _common_config(run)
-    run.add_argument("algorithm", choices=("baro", "art", "eadro", "causalrca"))
+    run.add_argument("algorithm")
     run.add_argument("--snapshot", type=Path, required=True)
     run.add_argument("--output", type=Path, required=True)
     run.add_argument("--container-runner", type=Path, default=Path("containers/run_algorithm.py"))
@@ -213,7 +230,7 @@ def build_parser() -> argparse.ArgumentParser:
 
     evaluation = subparsers.add_parser("evaluate", help="calculate canonical ranking metrics")
     _common_config(evaluation)
-    evaluation.add_argument("algorithm", choices=("baro", "art", "eadro", "causalrca"))
+    evaluation.add_argument("algorithm")
     evaluation.add_argument("--snapshot", type=Path, required=True)
     evaluation.add_argument("--results", type=Path, required=True)
     evaluation.add_argument("--output", type=Path, required=True)
@@ -225,7 +242,7 @@ def build_parser() -> argparse.ArgumentParser:
 
     record = subparsers.add_parser("record", help="promote metrics to the leaderboard")
     _common_config(record)
-    record.add_argument("algorithm", choices=("baro", "art", "eadro", "causalrca"))
+    record.add_argument("algorithm")
     record.add_argument("--metrics", type=Path, required=True)
     record.add_argument("--leaderboard", type=Path, default=Path("results/leaderboard.json"))
     record.add_argument("--run-id", required=True)

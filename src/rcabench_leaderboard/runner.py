@@ -73,6 +73,9 @@ def build_docker_command(
         f"{container_runner.resolve()}:/benchmark_runner.py:ro",
     ]
 
+    for key, value in sorted(algorithm.get("environment", {}).items()):
+        command.extend(["--env", f"{key}={value}"])
+
     if name == "art":
         if assets is None:
             raise ValueError("ART requires --assets")

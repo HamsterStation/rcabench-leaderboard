@@ -20,11 +20,6 @@ mark_stage() {
 
 trap 'mark_stage failed' ERR
 
-ensure_image() {
-  local target=$1 source=$2
-  docker image inspect "$target" >/dev/null 2>&1 || docker tag "$source" "$target"
-}
-
 run_and_evaluate() {
   local algorithm=$1 assets=${2:-}
   local asset_args=()
@@ -38,26 +33,30 @@ run_and_evaluate() {
     --output "$RUN_ROOT/metrics/$algorithm.json" --require-complete
 }
 
-ensure_image ghcr.io/hamsterstation/rcabench-baro:0a18961e fse-baro:0a18961e
-ensure_image ghcr.io/hamsterstation/rcabench-art:ba8dfd3f fse-art:ba8dfd3f
-ensure_image ghcr.io/hamsterstation/rcabench-eadro:4ee55dfc fse-eadro:4ee55dfc
-ensure_image ghcr.io/hamsterstation/rcabench-causalrca:3f4ceee8 fse-causalrca:3f4ceee8
+mapfile -t ALGORITHMS < <("$PYTHON_ENV/bin/python" -c \
+  'import sys; from rcabench_leaderboard.config import load_config; c=load_config(sys.argv[1]); print("\n".join(sorted(c["algorithms"])))' \
+  "$CONFIG")
+for algorithm in "${ALGORITHMS[@]}"; do
+  image=$("$PYTHON_ENV/bin/python" -c \
+    'import sys; from rcabench_leaderboard.config import load_config; print(load_config(sys.argv[1])["algorithms"][sys.argv[2]]["image"])' \
+    "$CONFIG" "$algorithm")
+  docker pull "$image"
+done
 
 mark_stage normalize
 "$CLI" normalize-ops-lite --config "$CONFIG" --snapshot "$SNAPSHOT" \
   > "$RUN_ROOT/logs/normalize.json"
 
-run_and_evaluate baro
-
-mark_stage prepare-art
-ART_ASSETS=$("$CLI" prepare art --config "$CONFIG" --snapshot "$SNAPSHOT" \
-  --cache-root "$RUN_ROOT/cache" --repository-root "$REPO")
-run_and_evaluate art "$ART_ASSETS"
-
-mark_stage prepare-eadro
-EADRO_ASSETS=$("$CLI" prepare eadro --config "$CONFIG" --snapshot "$SNAPSHOT" \
-  --cache-root "$RUN_ROOT/cache" --repository-root "$REPO")
-run_and_evaluate eadro "$EADRO_ASSETS"
-
-run_and_evaluate causalrca
+for algorithm in "${ALGORITHMS[@]}"; do
+  preparation=$("$PYTHON_ENV/bin/python" -c \
+    'import sys; from rcabench_leaderboard.config import load_config; print(load_config(sys.argv[1])["algorithms"][sys.argv[2]].get("preparation", ""))' \
+    "$CONFIG" "$algorithm")
+  assets=""
+  if [[ -n "$preparation" ]]; then
+    mark_stage "prepare-$algorithm"
+    assets=$("$CLI" prepare "$algorithm" --config "$CONFIG" --snapshot "$SNAPSHOT" \
+      --cache-root "$RUN_ROOT/cache" --repository-root "$REPO")
+  fi
+  run_and_evaluate "$algorithm" "$assets"
+done
 mark_stage complete

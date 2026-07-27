@@ -24,7 +24,7 @@ concurrency:
 
 jobs:
   deploy:
-    if: vars.PAGES_ENABLED == 'true' && (github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success')
+    if: vars.PAGES_ENABLED == 'true'
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}

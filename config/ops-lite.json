@@ -1,5 +1,6 @@
 {
   "schema_version": 1,
+  "algorithm_registry": "algorithms.json",
   "benchmark": {
     "id": "ops-lite-fault-service-seed42",
     "title": "OPS-Lite",
@@ -18,18 +19,11 @@
     },
     "download_workers": 16,
     "allow_patterns": [
-      "manifest.jsonl",
-      "README.md",
-      "cases/*/injection.json",
-      "cases/*/env.json",
-      "cases/*/normal_metrics.parquet",
-      "cases/*/abnormal_metrics.parquet",
-      "cases/*/normal_metrics_sum.parquet",
-      "cases/*/abnormal_metrics_sum.parquet",
-      "cases/*/normal_traces.parquet",
-      "cases/*/abnormal_traces.parquet",
-      "cases/*/normal_logs.parquet",
-      "cases/*/abnormal_logs.parquet"
+      "manifest.jsonl", "README.md", "cases/*/injection.json", "cases/*/env.json",
+      "cases/*/normal_metrics.parquet", "cases/*/abnormal_metrics.parquet",
+      "cases/*/normal_metrics_sum.parquet", "cases/*/abnormal_metrics_sum.parquet",
+      "cases/*/normal_traces.parquet", "cases/*/abnormal_traces.parquet",
+      "cases/*/normal_logs.parquet", "cases/*/abnormal_logs.parquet"
     ],
     "data_dir": ".",
     "manifests": {
@@ -37,64 +31,11 @@
       "train": "rcabench/manifests/train.txt",
       "test": "rcabench/manifests/test.txt"
     },
-    "expected_cases": {
-      "all": 500,
-      "train": 400,
-      "test": 100
-    }
+    "expected_cases": {"all": 500, "train": 400, "test": 100}
   },
-  "algorithms": {
-    "baro": {
-      "display_name": "BARO",
-      "source": "https://github.com/LGU-SE-Internal/baro.git",
-      "commit": "0a18961e30ca058a249276f9f4e961ca435eaf22",
-      "image": "ghcr.io/hamsterstation/rcabench-baro:0a18961e",
-      "scope": "all",
-      "workers": 4,
-      "cpus_per_worker": 2,
-      "timeout_seconds": 300,
-      "max_algorithm_errors": 3,
-      "python": ".venv/bin/python",
-      "workdir": "/app"
-    },
-    "art": {
-      "display_name": "ART",
-      "source": "https://github.com/LGU-SE-Internal/ART.git",
-      "commit": "ba8dfd3f0054cf90af3135dcdfa0f7a339ab254d",
-      "image": "ghcr.io/hamsterstation/rcabench-art:ba8dfd3f",
-      "scope": "test",
-      "workers": 1,
-      "cpus_per_worker": 4,
-      "timeout_seconds": 300,
-      "max_algorithm_errors": 3,
-      "python": "/.venv/bin/python",
-      "workdir": "/"
-    },
-    "eadro": {
-      "display_name": "Eadro",
-      "source": "https://github.com/LGU-SE-Internal/Eadro.git",
-      "commit": "4ee55dfc3b23000dc3dcfda725bd63737b97a457",
-      "image": "ghcr.io/hamsterstation/rcabench-eadro:4ee55dfc",
-      "scope": "test",
-      "workers": 1,
-      "cpus_per_worker": 4,
-      "timeout_seconds": 300,
-      "max_algorithm_errors": 0,
-      "python": ".venv/bin/python",
-      "workdir": "/app"
-    },
-    "causalrca": {
-      "display_name": "CausalRCA",
-      "source": "https://github.com/LGU-SE-Internal/CausalRCA.git",
-      "commit": "3f4ceee8c821c7332dc20ac5ba70175b3930bf21",
-      "image": "ghcr.io/hamsterstation/rcabench-causalrca:3f4ceee8",
-      "scope": "all",
-      "workers": 4,
-      "cpus_per_worker": 2,
-      "timeout_seconds": 1800,
-      "max_algorithm_errors": 3,
-      "python": ".venv/bin/python",
-      "workdir": "/app"
-    }
+  "algorithm_overrides": {
+    "baro": {"max_algorithm_errors": 3},
+    "art": {"max_algorithm_errors": 3},
+    "causalrca": {"max_algorithm_errors": 3}
   }
 }

@@ -1,0 +1,58 @@
+name: Watch registered datasets
+
+on:
+  schedule:
+    - cron: "43 2 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python -m pip install -e '.[dev]'
+      - name: Pin new revisions and regenerate deterministic splits
+        id: pin
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        run: |
+          REPORT=$(python scripts/check_datasets.py --apply)
+          echo "$REPORT"
+          echo "benchmarks=$(jq -r '[.updates[].dataset] | join(",")' <<< "$REPORT")" >> "$GITHUB_OUTPUT"
+      - name: Validate generated configuration
+        run: |
+          rcabench-leaderboard validate --config config/benchmark.json
+          rcabench-leaderboard validate --config config/ops-lite.json
+          pytest -q
+      - id: pr
+        uses: peter-evans/create-pull-request@v7
+        with:
+          branch: automation/update-dataset-pins
+          delete-branch: true
+          commit-message: "chore: pin new dataset revisions"
+          title: "chore: evaluate new registered dataset revisions"
+          body: |
+            Automated update from a trusted dataset registered in `config/datasets.json`.
+            Revision metadata and deterministic split manifests passed repository tests.
+          labels: dataset-update,benchmark
+      - name: Merge validated trusted dataset update
+        if: steps.pr.outputs.pull-request-number != ''
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh pr merge '${{ steps.pr.outputs.pull-request-number }}' --squash --delete-branch
+      - name: Queue affected benchmark matrix
+        if: steps.pr.outputs.pull-request-number != ''
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh api --method POST repos/${{ github.repository }}/dispatches \
+            -f event_type=dataset-updated \
+            -f 'client_payload[benchmarks]=${{ steps.pin.outputs.benchmarks }}' \
+            -f 'client_payload[algorithms]=all'
