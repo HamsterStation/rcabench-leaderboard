@@ -4,47 +4,56 @@
     "baro": {
       "source": "https://github.com/LGU-SE-Internal/baro.git",
       "commit": "0a18961e30ca058a249276f9f4e961ca435eaf22",
-      "image": "ghcr.io/hamsterstation/rcabench-baro:0a18961e"
+      "image": "ghcr.io/hamsterstation/rcabench-baro:0a18961e-r1",
+      "tag_suffix": "-r1"
     },
     "art": {
       "source": "https://github.com/LGU-SE-Internal/ART.git",
       "commit": "ba8dfd3f0054cf90af3135dcdfa0f7a339ab254d",
-      "image": "ghcr.io/hamsterstation/rcabench-art:ba8dfd3f"
+      "image": "ghcr.io/hamsterstation/rcabench-art:ba8dfd3f-r1",
+      "tag_suffix": "-r1"
     },
     "eadro": {
       "source": "https://github.com/LGU-SE-Internal/Eadro.git",
       "commit": "4ee55dfc3b23000dc3dcfda725bd63737b97a457",
-      "image": "ghcr.io/hamsterstation/rcabench-eadro:4ee55dfc"
+      "image": "ghcr.io/hamsterstation/rcabench-eadro:4ee55dfc-r1",
+      "tag_suffix": "-r1"
     },
     "causalrca": {
       "source": "https://github.com/LGU-SE-Internal/CausalRCA.git",
       "commit": "3f4ceee8c821c7332dc20ac5ba70175b3930bf21",
-      "image": "ghcr.io/hamsterstation/rcabench-causalrca:3f4ceee8"
+      "image": "ghcr.io/hamsterstation/rcabench-causalrca:3f4ceee8-r1",
+      "tag_suffix": "-r1"
     },
     "diagfusion": {
       "source": "https://github.com/LGU-SE-Internal/DiagFusion.git",
       "commit": "38e1649188afa673c00d4b8534b3ff2dc0000d41",
-      "image": "ghcr.io/hamsterstation/rcabench-diagfusion:38e16491"
+      "image": "ghcr.io/hamsterstation/rcabench-diagfusion:38e16491-r1",
+      "tag_suffix": "-r1"
     },
     "microdig": {
       "source": "https://github.com/LGU-SE-Internal/MicroDig.git",
       "commit": "a25df3803194b1da1120985c61f5f2c9ee290fbc",
-      "image": "ghcr.io/hamsterstation/rcabench-microdig:a25df380"
+      "image": "ghcr.io/hamsterstation/rcabench-microdig:a25df380-r1",
+      "tag_suffix": "-r1"
     },
     "nezha": {
       "source": "https://github.com/LGU-SE-Internal/Nezha.git",
       "commit": "f0de4db8123a566e13c5fcfe6ac0d9137009f99a",
-      "image": "ghcr.io/hamsterstation/rcabench-nezha:f0de4db8"
+      "image": "ghcr.io/hamsterstation/rcabench-nezha:f0de4db8-r1",
+      "tag_suffix": "-r1"
     },
     "shapleyiq": {
       "source": "https://github.com/LGU-SE-Internal/ShapleyIQ.git",
       "commit": "ceac113d2d1a3a571013ca58358e8b9f9e61933f",
-      "image": "ghcr.io/hamsterstation/rcabench-shapleyiq:ceac113d"
+      "image": "ghcr.io/hamsterstation/rcabench-shapleyiq:ceac113d-r1",
+      "tag_suffix": "-r1"
     },
     "simplerca": {
       "source": "https://github.com/LGU-SE-Internal/Simple-RCA.git",
       "commit": "1be391178d872302dd17fcefa3d2cc4505ce4513",
-      "image": "ghcr.io/hamsterstation/rcabench-simplerca:1be39117"
+      "image": "ghcr.io/hamsterstation/rcabench-simplerca:1be39117-r1",
+      "tag_suffix": "-r1"
     }
   },
   "algorithms": {

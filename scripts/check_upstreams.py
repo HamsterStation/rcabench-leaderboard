@@ -32,7 +32,8 @@ def main() -> None:
         updates.append({"image": name, "before": image["commit"], "after": head})
         if args.apply:
             image["commit"] = head
-            image["image"] = f"ghcr.io/hamsterstation/rcabench-{name}:{head[:8]}"
+            suffix = image.get("tag_suffix", "")
+            image["image"] = f"ghcr.io/hamsterstation/rcabench-{name}:{head[:8]}{suffix}"
     if args.apply and updates:
         args.registry.write_text(json.dumps(registry, indent=2) + "\n")
     print(json.dumps({"updates": updates}, indent=2))
