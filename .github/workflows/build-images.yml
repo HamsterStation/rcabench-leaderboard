@@ -2,11 +2,6 @@ name: Build algorithm images
 
 on:
   workflow_dispatch:
-  push:
-    branches: [main]
-    paths:
-      - config/algorithms.json
-      - .github/workflows/build-images.yml
 
 permissions:
   contents: read

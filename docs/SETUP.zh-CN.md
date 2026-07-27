@@ -144,11 +144,12 @@ gh api --method POST \
 ## 3. 算法更新
 
 `Watch algorithm upstreams` 每天读取九个上游镜像仓库的默认分支 HEAD。发现
-更新时会更新固定 commit、运行仓库测试，并通过留痕 PR 自动合并。随后：
+更新时会更新固定 commit、运行仓库测试，并创建留痕 PR。随后：
 
-1. 构建新 commit 对应的不可变 GHCR 镜像；
-2. `Build algorithm images` 成功后自动排队执行全量评测；
-3. 结果验证通过后更新排行榜和 GitHub Pages。
+1. PR 内构建新 commit 对应的不可变 GHCR 镜像；
+2. 自动识别受影响算法，并在所有已登记数据集上运行；
+3. 指标与完整性校验全部通过后，机器人把指标提交回 PR 并自动 squash merge；
+4. main 中的排行榜和 GitHub Pages 随合并自动更新。
 
 新镜像或评测失败时不会覆盖对应的正式指标；成功算法的指标仍可独立发布。
 这些仓库属于显式登记的受信任来源；任意陌生算法不会自动执行。
@@ -182,7 +183,8 @@ Actions 页面重新执行 workflow。不要删除已有 case 结果和训练 ca
 `Watch registered datasets` 每天检查 `config/datasets.json` 中受信任的 Hugging
 Face 仓库。已有数据集的新 revision 会自动固定到 commit SHA；OPS-Lite 会按同一
 seed 重新生成 fault、service 与 fault × service 分层的 train/test 清单，通过测试
-后自动合并并启动 12 算法评测，最终更新 Pages。
+后创建 PR。PR 内会对该数据集运行全部 12 个算法；指标通过后才自动合并并更新
+Pages。手动新增算法或数据集也走同一套 PR 门禁。
 
 “任意新数据集”仍需先登记一次：新增数据集配置，并提供把其原始格式转换成
 RCABench `converted/` 结构的适配器。之后该数据集的新版本才会全自动运行。这样
