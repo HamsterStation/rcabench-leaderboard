@@ -1,60 +1,171 @@
 {
-  "schema_version": 1,
-  "generated_at": "2026-07-20T10:00:00Z",
-  "benchmark": {
-    "id": "fse-rcabench-fault-service-seed42",
-    "title": "FSE RCABench",
-    "dataset_cases": 1422,
-    "train_cases": 1126,
-    "test_cases": 296,
-    "dataset_revision": "588165081264b3de851b7b3b7ec59d27a5258107ad04c56d8c1c3f2a5ff76da7"
-  },
-  "entries": [
+  "schema_version": 2,
+  "generated_at": "2026-07-27T06:58:48.495680Z",
+  "benchmarks": [
     {
-      "algorithm": "baro",
-      "display_name": "BARO",
-      "algorithm_commit": "0a18961e30ca058a249276f9f4e961ca435eaf22",
-      "scope": "all",
-      "cases": 1422,
-      "run_id": "initial-reproduction",
-      "metrics": {"top@1": 0.4121, "top@3": 0.5956, "top@5": 0.6983, "avg@3": 0.5120, "avg@5": 0.5786, "mrr": 0.5379, "average_algorithm_seconds": 0.72}
+      "benchmark": {
+        "id": "fse-rcabench-fault-service-seed42",
+        "title": "FSE RCABench",
+        "dataset_cases": 1422,
+        "train_cases": 1126,
+        "test_cases": 296,
+        "dataset_revision": "588165081264b3de851b7b3b7ec59d27a5258107ad04c56d8c1c3f2a5ff76da7"
+      },
+      "entries": [
+        {
+          "algorithm": "baro",
+          "display_name": "BARO",
+          "algorithm_commit": "0a18961e30ca058a249276f9f4e961ca435eaf22",
+          "scope": "all",
+          "cases": 1422,
+          "run_id": "initial-reproduction",
+          "metrics": {
+            "top@1": 0.4121,
+            "top@3": 0.5956,
+            "top@5": 0.6983,
+            "avg@3": 0.512,
+            "avg@5": 0.5786,
+            "mrr": 0.5379,
+            "average_algorithm_seconds": 0.72
+          }
+        },
+        {
+          "algorithm": "causalrca",
+          "display_name": "CausalRCA",
+          "algorithm_commit": "3f4ceee8c821c7332dc20ac5ba70175b3930bf21",
+          "scope": "all",
+          "cases": 1422,
+          "run_id": "initial-reproduction",
+          "metrics": {
+            "top@1": 0.1617,
+            "top@3": 0.3502,
+            "top@5": 0.3889,
+            "avg@3": 0.2752,
+            "avg@5": 0.3165,
+            "mrr": 0.2925,
+            "average_algorithm_seconds": 624.37
+          }
+        },
+        {
+          "algorithm": "eadro",
+          "display_name": "Eadro",
+          "algorithm_commit": "4ee55dfc3b23000dc3dcfda725bd63737b97a457",
+          "scope": "test",
+          "cases": 296,
+          "run_id": "initial-reproduction",
+          "metrics": {
+            "top@1": 0.1284,
+            "top@3": 0.3209,
+            "top@5": 0.4459,
+            "avg@3": 0.2173,
+            "avg@5": 0.2892,
+            "mrr": 0.2313,
+            "average_algorithm_seconds": 3.6
+          }
+        },
+        {
+          "algorithm": "art",
+          "display_name": "ART",
+          "algorithm_commit": "ba8dfd3f0054cf90af3135dcdfa0f7a339ab254d",
+          "scope": "test",
+          "cases": 296,
+          "run_id": "initial-reproduction",
+          "metrics": {
+            "top@1": 0.0236,
+            "top@3": 0.1081,
+            "top@5": 0.1453,
+            "avg@3": 0.0597,
+            "avg@5": 0.0892,
+            "mrr": 0.0639,
+            "average_algorithm_seconds": 5.22
+          }
+        }
+      ],
+      "paper_reference": {
+        "citation": "RCABench FSE paper",
+        "metrics": {
+          "baro": {
+            "top@1": 0.36,
+            "top@3": 0.5,
+            "top@5": 0.58,
+            "avg@3": 0.43,
+            "avg@5": 0.48,
+            "mrr": 0.44,
+            "average_algorithm_seconds": 0.99
+          },
+          "causalrca": {
+            "top@1": 0.22,
+            "top@3": 0.4,
+            "top@5": 0.42,
+            "avg@3": 0.33,
+            "avg@5": 0.36,
+            "mrr": 0.31,
+            "average_algorithm_seconds": 927.11
+          },
+          "eadro": {
+            "top@1": 0.16,
+            "top@3": 0.16,
+            "top@5": 0.16,
+            "avg@3": 0.16,
+            "avg@5": 0.16,
+            "mrr": 0.16,
+            "average_algorithm_seconds": 32.75
+          },
+          "art": {
+            "top@1": 0.04,
+            "top@3": 0.08,
+            "top@5": 0.1,
+            "avg@3": 0.06,
+            "avg@5": 0.07,
+            "mrr": 0.06,
+            "average_algorithm_seconds": 8.1
+          }
+        }
+      }
     },
     {
-      "algorithm": "causalrca",
-      "display_name": "CausalRCA",
-      "algorithm_commit": "3f4ceee8c821c7332dc20ac5ba70175b3930bf21",
-      "scope": "all",
-      "cases": 1422,
-      "run_id": "initial-reproduction",
-      "metrics": {"top@1": 0.1617, "top@3": 0.3502, "top@5": 0.3889, "avg@3": 0.2752, "avg@5": 0.3165, "mrr": 0.2925, "average_algorithm_seconds": 624.37}
-    },
-    {
-      "algorithm": "eadro",
-      "display_name": "Eadro",
-      "algorithm_commit": "4ee55dfc3b23000dc3dcfda725bd63737b97a457",
-      "scope": "test",
-      "cases": 296,
-      "run_id": "initial-reproduction",
-      "metrics": {"top@1": 0.1284, "top@3": 0.3209, "top@5": 0.4459, "avg@3": 0.2173, "avg@5": 0.2892, "mrr": 0.2313, "average_algorithm_seconds": 3.60}
-    },
-    {
-      "algorithm": "art",
-      "display_name": "ART",
-      "algorithm_commit": "ba8dfd3f0054cf90af3135dcdfa0f7a339ab254d",
-      "scope": "test",
-      "cases": 296,
-      "run_id": "initial-reproduction",
-      "metrics": {"top@1": 0.0236, "top@3": 0.1081, "top@5": 0.1453, "avg@3": 0.0597, "avg@5": 0.0892, "mrr": 0.0639, "average_algorithm_seconds": 5.22}
+      "benchmark": {
+        "id": "ops-lite-fault-service-seed42",
+        "title": "OPS-Lite",
+        "dataset_cases": 500,
+        "train_cases": 400,
+        "test_cases": 100,
+        "dataset_revision": "5d4d3960446408a6e43ea87c51a255aa7a39d43a1db6aeb731cf20b18f4fb7cd"
+      },
+      "entries": [
+        {
+          "algorithm": "baro",
+          "display_name": "BARO",
+          "algorithm_commit": "0a18961e30ca058a249276f9f4e961ca435eaf22",
+          "scope": "all",
+          "cases": 500,
+          "run_id": "github-30242465846-1",
+          "metrics": {
+            "algorithm_error_case_names": [
+              "batch-01KQKFP1BN9YPB54XYDNMF6JCM",
+              "batch-01KQKFS02FRXXW7DTT0GYKZASY",
+              "batch-01KQKFS3XYZAA7G3ZSPME1H3MJ"
+            ],
+            "algorithm_error_cases": 3,
+            "average_algorithm_seconds": 0.44115664150193334,
+            "avg@3": 0.3499999999999999,
+            "avg@5": 0.39719999999999994,
+            "deduplicate_services": true,
+            "duplicate_ranking_cases": 383,
+            "invalid_case_names": [],
+            "invalid_cases": 0,
+            "missing_case_names": [],
+            "missing_cases": 0,
+            "mrr": 0.36256269461532625,
+            "requested_cases": 500,
+            "schema_version": 1,
+            "successful_result_files": 500,
+            "top@1": 0.282,
+            "top@3": 0.412,
+            "top@5": 0.48
+          }
+        }
+      ]
     }
-  ],
-  "paper_reference": {
-    "citation": "RCABench FSE paper",
-    "metrics": {
-      "baro": {"top@1": 0.36, "top@3": 0.50, "top@5": 0.58, "avg@3": 0.43, "avg@5": 0.48, "mrr": 0.44, "average_algorithm_seconds": 0.99},
-      "causalrca": {"top@1": 0.22, "top@3": 0.40, "top@5": 0.42, "avg@3": 0.33, "avg@5": 0.36, "mrr": 0.31, "average_algorithm_seconds": 927.11},
-      "eadro": {"top@1": 0.16, "top@3": 0.16, "top@5": 0.16, "avg@3": 0.16, "avg@5": 0.16, "mrr": 0.16, "average_algorithm_seconds": 32.75},
-      "art": {"top@1": 0.04, "top@3": 0.08, "top@5": 0.10, "avg@3": 0.06, "avg@5": 0.07, "mrr": 0.06, "average_algorithm_seconds": 8.10}
-    }
-  }
+  ]
 }
-
