@@ -7,10 +7,18 @@ import subprocess
 import sys
 from pathlib import Path
 
-from .config import dataset_path, load_config, manifest_path, read_manifest
+from .config import (
+    SUPPORTED_DATASET_ADAPTERS,
+    dataset_path,
+    load_config,
+    load_dataset_registry,
+    load_registered_configs,
+    manifest_path,
+    read_manifest,
+)
+from .datasets import format_metadata, normalize_dataset
 from .download import download_dataset
 from .evaluation import evaluate, write_metrics
-from .ops_lite import normalize_ops_lite
 from .prepare import prepare_assets
 from .records import build_site, record_metrics
 from .runner import run_benchmark
@@ -51,6 +59,27 @@ def command_validate(args: argparse.Namespace) -> None:
     )
 
 
+def command_validate_registry(args: argparse.Namespace) -> None:
+    registry = load_dataset_registry(args.registry)
+    configs = load_registered_configs(args.registry)
+    print(
+        json.dumps(
+            {
+                "status": "valid",
+                "datasets": [
+                    {
+                        "name": name,
+                        "adapter": registry["datasets"][name]["adapter"],
+                        "benchmark": configs[name]["benchmark"]["id"],
+                    }
+                    for name in sorted(configs)
+                ],
+            },
+            indent=2,
+        )
+    )
+
+
 def command_doctor(args: argparse.Namespace) -> None:
     config = load_config(args.config)
     checks = {
@@ -80,22 +109,15 @@ def command_download(args: argparse.Namespace) -> None:
     print(download_dataset(config, args.output))
 
 
-def command_normalize_ops_lite(args: argparse.Namespace) -> None:
+def command_normalize(args: argparse.Namespace) -> None:
     config = load_config(args.config)
-    dataset = config["dataset"]
-    pinned = dataset.get("pinned_split_manifests", {})
-    config_root = args.config.resolve().parent
-    metadata = normalize_ops_lite(
-        args.snapshot,
-        expected_manifest_sha256=dataset.get("manifest_sha256"),
-        expected_cases=int(dataset["expected_cases"]["all"]),
-        test_size=int(dataset["expected_cases"]["test"]),
-        seed=int(dataset.get("split_seed", 42)),
-        pinned_train_manifest=config_root / pinned["train"] if pinned else None,
-        pinned_test_manifest=config_root / pinned["test"] if pinned else None,
-        source_revision=dataset["revision"],
+    metadata = normalize_dataset(
+        config,
+        args.config.resolve(),
+        args.snapshot.resolve(),
+        args.adapter,
     )
-    print(json.dumps(metadata, indent=2))
+    print(format_metadata(metadata))
 
 
 def command_prepare(args: argparse.Namespace) -> None:
@@ -192,6 +214,14 @@ def build_parser() -> argparse.ArgumentParser:
     _common_config(validate)
     validate.set_defaults(function=command_validate)
 
+    validate_registry = subparsers.add_parser(
+        "validate-registry", help="validate every registered dataset configuration"
+    )
+    validate_registry.add_argument(
+        "--registry", type=Path, default=Path("config/datasets.json")
+    )
+    validate_registry.set_defaults(function=command_validate_registry)
+
     doctor = subparsers.add_parser("doctor", help="check the local execution environment")
     _common_config(doctor)
     doctor.set_defaults(function=command_doctor)
@@ -201,12 +231,18 @@ def build_parser() -> argparse.ArgumentParser:
     download.add_argument("--output", type=Path, required=True)
     download.set_defaults(function=command_download)
 
-    normalize = subparsers.add_parser(
-        "normalize-ops-lite", help="create an RCABench-compatible view and deterministic split"
-    )
+    normalize = subparsers.add_parser("normalize", help="prepare a registered dataset adapter")
     _common_config(normalize)
     normalize.add_argument("--snapshot", type=Path, required=True)
-    normalize.set_defaults(function=command_normalize_ops_lite)
+    normalize.add_argument("--adapter", choices=sorted(SUPPORTED_DATASET_ADAPTERS), required=True)
+    normalize.set_defaults(function=command_normalize)
+
+    legacy_normalize = subparsers.add_parser(
+        "normalize-ops-lite", help="deprecated alias for normalize --adapter ops-lite"
+    )
+    _common_config(legacy_normalize)
+    legacy_normalize.add_argument("--snapshot", type=Path, required=True)
+    legacy_normalize.set_defaults(function=command_normalize, adapter="ops-lite")
 
     prepare = subparsers.add_parser("prepare", help="train/cache ART or Eadro assets")
     _common_config(prepare)

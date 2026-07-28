@@ -13,9 +13,10 @@ from rcabench_leaderboard.config import load_config, load_dataset_registry
 from rcabench_leaderboard.matrix import image_matrix
 
 
-def _base_json(base: str, path: Path) -> dict[str, Any]:
+def _base_json(base: str, root: Path, path: Path) -> dict[str, Any]:
     process = subprocess.run(
         ["git", "show", f"{base}:{path.as_posix()}"],
+        cwd=root,
         text=True,
         capture_output=True,
         check=False,
@@ -25,10 +26,12 @@ def _base_json(base: str, path: Path) -> dict[str, Any]:
     return json.loads(process.stdout)
 
 
-def _changed(base: str, path: Path) -> bool:
+def _changed(base: str, root: Path, path: Path) -> bool:
     return (
         subprocess.run(
-            ["git", "diff", "--quiet", base, "--", path.as_posix()], check=False
+            ["git", "diff", "--quiet", base, "--", path.as_posix()],
+            check=False,
+            cwd=root,
         ).returncode
         != 0
     )
@@ -40,11 +43,20 @@ def _build_definition(definition: dict[str, Any] | None) -> tuple[Any, ...]:
     return tuple(definition.get(key) for key in ("source", "commit", "image"))
 
 
+def _dataset_definition(definition: dict[str, Any] | None) -> tuple[Any, ...]:
+    if definition is None:
+        return ()
+    adapter = definition.get("adapter")
+    if adapter is None:
+        adapter = "ops-lite" if definition.get("update_adapter") == "ops-lite" else "native"
+    return definition.get("config"), adapter
+
+
 def plan(base: str, root: Path) -> dict[str, Any]:
     algorithm_path = root / "config/algorithms.json"
     dataset_path = root / "config/datasets.json"
     current_raw = json.loads(algorithm_path.read_text())
-    base_raw = _base_json(base, algorithm_path.relative_to(root))
+    base_raw = _base_json(base, root, algorithm_path.relative_to(root))
 
     current_images = current_raw.get("images", {})
     base_images = base_raw.get("images", {})
@@ -62,12 +74,12 @@ def plan(base: str, root: Path) -> dict[str, Any]:
     }
 
     datasets = load_dataset_registry(dataset_path)["datasets"]
-    base_datasets = _base_json(base, dataset_path.relative_to(root)).get("datasets", {})
+    base_datasets = _base_json(base, root, dataset_path.relative_to(root)).get("datasets", {})
     changed_datasets = {
         name
         for name, entry in datasets.items()
-        if entry != base_datasets.get(name)
-        or _changed(base, (dataset_path.parent / entry["config"]).relative_to(root))
+        if _dataset_definition(entry) != _dataset_definition(base_datasets.get(name))
+        or _changed(base, root, (dataset_path.parent / entry["config"]).relative_to(root))
     }
 
     configs = {
@@ -93,6 +105,7 @@ def plan(base: str, root: Path) -> dict[str, Any]:
             "config": (dataset_path.parent / datasets[benchmark]["config"])
             .relative_to(root)
             .as_posix(),
+            "adapter": datasets[benchmark]["adapter"],
             "algorithm": algorithm,
             "prepare": bool(configs[benchmark]["algorithms"][algorithm].get("preparation")),
         }

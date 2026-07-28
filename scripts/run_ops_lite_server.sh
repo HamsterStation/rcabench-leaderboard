@@ -44,7 +44,7 @@ for algorithm in "${ALGORITHMS[@]}"; do
 done
 
 mark_stage normalize
-"$CLI" normalize-ops-lite --config "$CONFIG" --snapshot "$SNAPSHOT" \
+"$CLI" normalize --adapter ops-lite --config "$CONFIG" --snapshot "$SNAPSHOT" \
   > "$RUN_ROOT/logs/normalize.json"
 
 for algorithm in "${ALGORITHMS[@]}"; do

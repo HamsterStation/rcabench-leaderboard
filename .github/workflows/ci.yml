@@ -20,11 +20,10 @@ jobs:
       - run: python -m pip install -e '.[dev]'
       - run: ruff check .
       - run: pytest -q
-      - run: rcabench-leaderboard validate
+      - run: rcabench-leaderboard validate-registry
       - run: rcabench-leaderboard build-site
       - run: node --check site/app.js
       - uses: actions/upload-artifact@v4
         with:
           name: preview-site
           path: site/
-

@@ -48,12 +48,12 @@ def _write_config(path: Path, config: dict[str, Any]) -> None:
     path.write_text(json.dumps(config, indent=2) + "\n")
 
 
-def _update_fse(config_path: Path, config: dict[str, Any], revision: str) -> None:
+def _update_native(config_path: Path, config: dict[str, Any], revision: str) -> None:
     dataset = config["dataset"]
     summary = json.loads(_file(dataset["repo_id"], revision, "manifests/summary.json"))
     required = ("manifest_sha256", "total", "train", "test")
     if any(key not in summary for key in required):
-        raise ValueError("FSE manifests/summary.json is missing required version fields")
+        raise ValueError("native dataset manifests/summary.json is missing required version fields")
     dataset["revision"] = revision
     dataset["manifest_sha256"] = summary["manifest_sha256"]
     dataset["expected_cases"] = {
@@ -122,8 +122,8 @@ def main() -> None:
         updates.append({"dataset": name, "before": dataset["revision"], "after": head_sha})
         if args.apply:
             adapter = entry.get("update_adapter")
-            if adapter == "fse":
-                _update_fse(config_path, config, head_sha)
+            if adapter == "native":
+                _update_native(config_path, config, head_sha)
             elif adapter == "ops-lite":
                 _update_ops_lite(config_path, config, head_sha)
             else:

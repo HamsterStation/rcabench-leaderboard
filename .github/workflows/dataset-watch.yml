@@ -29,8 +29,7 @@ jobs:
           echo "benchmarks=$(jq -r '[.updates[].dataset] | join(",")' <<< "$REPORT")" >> "$GITHUB_OUTPUT"
       - name: Validate generated configuration
         run: |
-          rcabench-leaderboard validate --config config/benchmark.json
-          rcabench-leaderboard validate --config config/ops-lite.json
+          rcabench-leaderboard validate-registry
           pytest -q
       - id: pr
         uses: peter-evans/create-pull-request@v7
