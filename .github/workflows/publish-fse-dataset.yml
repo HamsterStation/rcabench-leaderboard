@@ -1,0 +1,63 @@
+name: Publish FSE dataset
+
+on:
+  workflow_dispatch:
+    inputs:
+      publish:
+        description: "Upload after validation (false performs a dry run)"
+        required: true
+        default: false
+        type: boolean
+      license_acknowledged:
+        description: "Confirm the original data terms permit this private upload"
+        required: true
+        default: false
+        type: boolean
+
+permissions:
+  contents: read
+
+concurrency:
+  group: publish-fse-dataset
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: [self-hosted, linux, x64, rcabench]
+    timeout-minutes: 720
+    env:
+      DATA_ROOT: /mnt/jfs-fixed/rcabench_dataset
+      MANIFESTS: /home/nn/fse_reproduction/manifests_fault_service_seed42
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up runner Python
+        shell: bash
+        run: |
+          BASE_PYTHON='${{ vars.RCABENCH_PYTHON || '/mnt/jfs-fixed/rcabench-venv/bin/python' }}'
+          [[ -x "$BASE_PYTHON" ]] || { echo "Missing Python: $BASE_PYTHON" >&2; exit 1; }
+          "$BASE_PYTHON" -m venv "$RUNNER_TEMP/rcabench-publish-venv"
+          echo "$RUNNER_TEMP/rcabench-publish-venv/bin" >> "$GITHUB_PATH"
+      - run: python -m pip install -e .
+      - name: Validate the local snapshot
+        run: |
+          python scripts/publish_dataset.py \
+            --data-root "$DATA_ROOT" \
+            --manifests "$MANIFESTS" \
+            --license-id other \
+            --dry-run
+      - name: Require explicit license acknowledgement
+        if: inputs.publish && !inputs.license_acknowledged
+        run: |
+          echo "Publishing requires license_acknowledged=true" >&2
+          exit 1
+      - name: Upload the private dataset and immutable tag
+        if: inputs.publish && inputs.license_acknowledged
+        env:
+          HF_TOKEN: ${{ secrets.HF_UPLOAD_TOKEN }}
+        run: |
+          test -n "$HF_TOKEN"
+          python scripts/publish_dataset.py \
+            --data-root "$DATA_ROOT" \
+            --manifests "$MANIFESTS" \
+            --license-id other \
+            --license-acknowledged
