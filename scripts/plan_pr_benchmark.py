@@ -34,6 +34,12 @@ def _changed(base: str, path: Path) -> bool:
     )
 
 
+def _build_definition(definition: dict[str, Any] | None) -> tuple[Any, ...]:
+    if definition is None:
+        return ()
+    return tuple(definition.get(key) for key in ("source", "commit", "image"))
+
+
 def plan(base: str, root: Path) -> dict[str, Any]:
     algorithm_path = root / "config/algorithms.json"
     dataset_path = root / "config/datasets.json"
@@ -43,7 +49,9 @@ def plan(base: str, root: Path) -> dict[str, Any]:
     current_images = current_raw.get("images", {})
     base_images = base_raw.get("images", {})
     changed_images = {
-        name for name, definition in current_images.items() if definition != base_images.get(name)
+        name
+        for name, definition in current_images.items()
+        if _build_definition(definition) != _build_definition(base_images.get(name))
     }
     current_algorithms = current_raw.get("algorithms", {})
     base_algorithms = base_raw.get("algorithms", {})
