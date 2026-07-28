@@ -24,7 +24,8 @@
     "diagfusion": {
       "source": "https://github.com/LGU-SE-Internal/DiagFusion.git",
       "commit": "38e1649188afa673c00d4b8534b3ff2dc0000d41",
-      "image": "ghcr.io/hamsterstation/rcabench-diagfusion:38e16491"
+      "image": "ghcr.io/hamsterstation/rcabench-diagfusion:38e16491",
+      "watch": false
     },
     "microdig": {
       "source": "https://github.com/LGU-SE-Internal/MicroDig.git",
@@ -34,7 +35,8 @@
     "nezha": {
       "source": "https://github.com/LGU-SE-Internal/Nezha.git",
       "commit": "f0de4db8123a566e13c5fcfe6ac0d9137009f99a",
-      "image": "ghcr.io/hamsterstation/rcabench-nezha:f0de4db8"
+      "image": "ghcr.io/hamsterstation/rcabench-nezha:f0de4db8",
+      "watch": false
     },
     "shapleyiq": {
       "source": "https://github.com/LGU-SE-Internal/ShapleyIQ.git",
