@@ -46,7 +46,8 @@
     "simplerca": {
       "source": "https://github.com/LGU-SE-Internal/Simple-RCA.git",
       "commit": "1be391178d872302dd17fcefa3d2cc4505ce4513",
-      "image": "ghcr.io/hamsterstation/rcabench-simplerca:1be39117"
+      "image": "ghcr.io/hamsterstation/rcabench-simplerca:1be39117-r1",
+      "tag_suffix": "-r1"
     }
   },
   "algorithms": {
