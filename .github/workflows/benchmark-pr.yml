@@ -148,13 +148,36 @@ jobs:
       - name: Download pinned dataset
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
+          LOCAL_DATA_ROOT: ${{ matrix.benchmark == 'fse' && vars.RCABENCH_FSE_DATA_ROOT || '' }}
+          LOCAL_MANIFESTS: ${{ matrix.benchmark == 'fse' && vars.RCABENCH_FSE_MANIFESTS || '' }}
         run: |
           mkdir -p "$DATASET_DIR"
-          for attempt in {1..12}; do
-            rcabench-leaderboard download --config "$BENCHMARK_CONFIG" --output "$DATASET_DIR" && break
-            [[ "$attempt" -lt 12 ]] || exit 1
-            sleep $((attempt * 15))
-          done
+          if [[ -n "$LOCAL_DATA_ROOT" || -n "$LOCAL_MANIFESTS" ]]; then
+            [[ -d "$LOCAL_DATA_ROOT" && -d "$LOCAL_MANIFESTS" ]] || {
+              echo "Both local dataset cache paths must exist" >&2
+              exit 1
+            }
+            mkdir -p "$DATASET_DIR/manifests"
+            for split in all train test; do
+              source="$LOCAL_MANIFESTS/$split.txt"
+              target="$DATASET_DIR/manifests/$split.txt"
+              [[ -f "$source" ]] || { echo "Missing $source" >&2; exit 1; }
+              [[ -e "$target" || -L "$target" ]] || ln -s "$source" "$target"
+            done
+            while IFS= read -r case; do
+              [[ -z "$case" ]] && continue
+              source="$LOCAL_DATA_ROOT/$case"
+              target="$DATASET_DIR/$case"
+              [[ -d "$source" ]] || { echo "Missing local case $source" >&2; exit 1; }
+              [[ -e "$target" || -L "$target" ]] || ln -s "$source" "$target"
+            done < "$LOCAL_MANIFESTS/all.txt"
+          else
+            for attempt in {1..12}; do
+              rcabench-leaderboard download --config "$BENCHMARK_CONFIG" --output "$DATASET_DIR" && break
+              [[ "$attempt" -lt 12 ]] || exit 1
+              sleep $((attempt * 15))
+            done
+          fi
       - name: Prepare dataset adapter
         run: >-
           rcabench-leaderboard normalize --adapter '${{ matrix.adapter }}'
@@ -162,7 +185,11 @@ jobs:
       - name: Pull algorithm image
         run: |
           IMAGE=$(python -c 'import os; from rcabench_leaderboard.config import load_config; print(load_config(os.environ["BENCHMARK_CONFIG"])["algorithms"]["${{ matrix.algorithm }}"]["image"])')
-          docker pull "$IMAGE"
+          for attempt in {1..12}; do
+            docker pull "$IMAGE" && break
+            [[ "$attempt" -lt 12 ]] || exit 1
+            sleep $((attempt * 15))
+          done
       - name: Prepare trained assets
         if: matrix.prepare
         id: prepare
