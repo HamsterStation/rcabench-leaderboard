@@ -24,14 +24,11 @@ def record_metrics(
                 {
                     "benchmark": leaderboard["benchmark"],
                     "entries": leaderboard.get("entries", []),
-                    **(
-                        {"paper_reference": leaderboard["paper_reference"]}
-                        if "paper_reference" in leaderboard
-                        else {}
-                    ),
                 }
             ],
         }
+    for benchmark in leaderboard["benchmarks"]:
+        benchmark.pop("paper_reference", None)
     metrics = json.loads(Path(metrics_path).read_text())
     algorithm = config["algorithms"][algorithm_name]
     entry = {

@@ -12,6 +12,7 @@ def test_record_migrates_single_benchmark_file_and_adds_second_board(tmp_path):
                 "generated_at": "2026-01-01T00:00:00Z",
                 "benchmark": {"id": "fse", "title": "FSE"},
                 "entries": [{"algorithm": "baro", "metrics": {"mrr": 0.5}}],
+                "paper_reference": {"metrics": {"baro": {"mrr": 0.6}}},
             }
         )
     )
@@ -46,3 +47,4 @@ def test_record_migrates_single_benchmark_file_and_adds_second_board(tmp_path):
         "fse",
         "ops-lite",
     }
+    assert all("paper_reference" not in board for board in result["benchmarks"])
