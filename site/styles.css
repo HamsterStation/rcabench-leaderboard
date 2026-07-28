@@ -50,7 +50,6 @@ h1 em { color: var(--accent); font-weight: 600; }
 .section-head { display: flex; justify-content: space-between; align-items: end; margin-bottom: 34px; }
 h2 { font-size: clamp(42px, 6vw, 76px); line-height: .95; }
 .legend { font: 11px "DM Mono", monospace; }
-.dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--accent); margin-right: 7px; }
 .benchmark-tabs { display: flex; flex-wrap: wrap; gap: 10px; margin: -10px 0 28px; }
 .benchmark-tabs button { padding: 10px 15px; border: 1px solid var(--ink); background: transparent; color: var(--ink); font: 500 11px "DM Mono", monospace; letter-spacing: .06em; text-transform: uppercase; cursor: pointer; }
 .benchmark-tabs button[aria-selected="true"] { background: var(--ink); color: var(--paper); }
@@ -67,8 +66,6 @@ tbody tr:hover { background: rgba(158,216,207,.25); }
 .rank { font: 600 26px "Fraunces", serif; color: var(--accent); }
 .commit { display: block; margin-top: 5px; color: rgba(18,37,42,.58); font: 10px "DM Mono", monospace; }
 .metric { display: block; font-weight: 500; }
-.delta { display: block; margin-top: 4px; font-size: 9px; color: rgba(18,37,42,.58); }
-.delta.outlier { color: var(--accent); font-weight: 500; }
 .method { padding: 80px 5vw 100px; display: grid; grid-template-columns: .9fr 1.1fr; gap: 7vw; background: var(--ink); color: var(--paper); }
 .method .index { color: var(--aqua); }
 .protocol-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px; background: rgba(244,239,228,.2); }
