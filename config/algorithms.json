@@ -23,8 +23,8 @@
     },
     "diagfusion": {
       "source": "https://github.com/LGU-SE-Internal/DiagFusion.git",
-      "commit": "38e1649188afa673c00d4b8534b3ff2dc0000d41",
-      "image": "ghcr.io/hamsterstation/rcabench-diagfusion:38e16491"
+      "commit": "675607d3aa4a657149291eb38f7ebd38900d286b",
+      "image": "ghcr.io/hamsterstation/rcabench-diagfusion:675607d3"
     },
     "microdig": {
       "source": "https://github.com/LGU-SE-Internal/MicroDig.git",
@@ -33,8 +33,8 @@
     },
     "nezha": {
       "source": "https://github.com/LGU-SE-Internal/Nezha.git",
-      "commit": "f0de4db8123a566e13c5fcfe6ac0d9137009f99a",
-      "image": "ghcr.io/hamsterstation/rcabench-nezha:f0de4db8"
+      "commit": "7b048e7a7fdb2c1237ad7d442f9ada9f929a8ae8",
+      "image": "ghcr.io/hamsterstation/rcabench-nezha:7b048e7a"
     },
     "shapleyiq": {
       "source": "https://github.com/LGU-SE-Internal/ShapleyIQ.git",
@@ -49,58 +49,105 @@
   },
   "algorithms": {
     "baro": {
-      "display_name": "BARO", "image_ref": "baro", "scope": "all",
+      "display_name": "BARO",
+      "image_ref": "baro",
+      "scope": "all",
       "schedule_priority": 10,
-      "workers": 4, "cpus_per_worker": 2, "timeout_seconds": 300,
-      "python": ".venv/bin/python", "workdir": "/app"
+      "workers": 4,
+      "cpus_per_worker": 2,
+      "timeout_seconds": 300,
+      "python": ".venv/bin/python",
+      "workdir": "/app"
     },
     "art": {
-      "display_name": "ART", "image_ref": "art", "scope": "test",
+      "display_name": "ART",
+      "image_ref": "art",
+      "scope": "test",
       "schedule_priority": 100,
-      "workers": 1, "cpus_per_worker": 4, "timeout_seconds": 300,
-      "python": "/.venv/bin/python", "workdir": "/", "preparation": "art"
+      "workers": 1,
+      "cpus_per_worker": 4,
+      "timeout_seconds": 300,
+      "python": "/.venv/bin/python",
+      "workdir": "/",
+      "preparation": "art"
     },
     "eadro": {
-      "display_name": "Eadro", "image_ref": "eadro", "scope": "test",
+      "display_name": "Eadro",
+      "image_ref": "eadro",
+      "scope": "test",
       "schedule_priority": 110,
-      "workers": 1, "cpus_per_worker": 4, "timeout_seconds": 300,
-      "python": ".venv/bin/python", "workdir": "/app", "preparation": "eadro"
+      "workers": 1,
+      "cpus_per_worker": 4,
+      "timeout_seconds": 300,
+      "python": ".venv/bin/python",
+      "workdir": "/app",
+      "preparation": "eadro"
     },
     "causalrca": {
-      "display_name": "CausalRCA", "image_ref": "causalrca", "scope": "all",
+      "display_name": "CausalRCA",
+      "image_ref": "causalrca",
+      "scope": "all",
       "schedule_priority": 1000,
-      "workers": 4, "cpus_per_worker": 2, "timeout_seconds": 1800,
-      "python": ".venv/bin/python", "workdir": "/app"
+      "workers": 4,
+      "cpus_per_worker": 2,
+      "timeout_seconds": 1800,
+      "python": ".venv/bin/python",
+      "workdir": "/app"
     },
     "microdig": {
-      "display_name": "MicroDig", "image_ref": "microdig", "scope": "all",
+      "display_name": "MicroDig",
+      "image_ref": "microdig",
+      "scope": "all",
       "schedule_priority": 30,
-      "workers": 4, "cpus_per_worker": 2, "timeout_seconds": 600,
-      "python": ".venv/bin/python", "workdir": "/app"
+      "workers": 4,
+      "cpus_per_worker": 2,
+      "timeout_seconds": 600,
+      "python": ".venv/bin/python",
+      "workdir": "/app"
     },
     "microhecl": {
-      "display_name": "MicroHECL", "image_ref": "shapleyiq", "scope": "all",
+      "display_name": "MicroHECL",
+      "image_ref": "shapleyiq",
+      "scope": "all",
       "schedule_priority": 40,
-      "workers": 4, "cpus_per_worker": 2, "timeout_seconds": 600,
-      "python": ".venv/bin/python", "workdir": "/app"
+      "workers": 4,
+      "cpus_per_worker": 2,
+      "timeout_seconds": 600,
+      "python": ".venv/bin/python",
+      "workdir": "/app"
     },
     "microrank": {
-      "display_name": "MicroRank", "image_ref": "shapleyiq", "scope": "all",
+      "display_name": "MicroRank",
+      "image_ref": "shapleyiq",
+      "scope": "all",
       "schedule_priority": 50,
-      "workers": 4, "cpus_per_worker": 2, "timeout_seconds": 600,
-      "python": ".venv/bin/python", "workdir": "/app"
+      "workers": 4,
+      "cpus_per_worker": 2,
+      "timeout_seconds": 600,
+      "python": ".venv/bin/python",
+      "workdir": "/app"
     },
     "microrca": {
-      "display_name": "MicroRCA", "image_ref": "shapleyiq", "scope": "all",
+      "display_name": "MicroRCA",
+      "image_ref": "shapleyiq",
+      "scope": "all",
       "schedule_priority": 60,
-      "workers": 4, "cpus_per_worker": 2, "timeout_seconds": 600,
-      "python": ".venv/bin/python", "workdir": "/app"
+      "workers": 4,
+      "cpus_per_worker": 2,
+      "timeout_seconds": 600,
+      "python": ".venv/bin/python",
+      "workdir": "/app"
     },
     "diagfusion": {
-      "display_name": "DiagFusion", "image_ref": "diagfusion", "scope": "test",
+      "display_name": "DiagFusion",
+      "image_ref": "diagfusion",
+      "scope": "test",
       "schedule_priority": 90,
-      "workers": 2, "cpus_per_worker": 4, "timeout_seconds": 600,
-      "python": ".venv/bin/python", "workdir": "/app",
+      "workers": 2,
+      "cpus_per_worker": 4,
+      "timeout_seconds": 600,
+      "python": ".venv/bin/python",
+      "workdir": "/app",
       "environment": {
         "CHECKPOINT_PATH": "/app/data/middle/checkpoints/service_model.pt",
         "DYNACONF_PATHS__METADATA": "/app/data/middle/metadata",
@@ -109,22 +156,37 @@
       "checkpoint_policy": "upstream-bundled"
     },
     "nezha": {
-      "display_name": "Nezha", "image_ref": "nezha", "scope": "all",
+      "display_name": "Nezha",
+      "image_ref": "nezha",
+      "scope": "all",
       "schedule_priority": 70,
-      "workers": 4, "cpus_per_worker": 2, "timeout_seconds": 900,
-      "python": ".venv/bin/python", "workdir": "/app"
+      "workers": 4,
+      "cpus_per_worker": 2,
+      "timeout_seconds": 900,
+      "python": ".venv/bin/python",
+      "workdir": "/app"
     },
     "shapleyiq": {
-      "display_name": "ShapleyIQ", "image_ref": "shapleyiq", "scope": "all",
+      "display_name": "ShapleyIQ",
+      "image_ref": "shapleyiq",
+      "scope": "all",
       "schedule_priority": 80,
-      "workers": 4, "cpus_per_worker": 2, "timeout_seconds": 900,
-      "python": ".venv/bin/python", "workdir": "/app"
+      "workers": 4,
+      "cpus_per_worker": 2,
+      "timeout_seconds": 900,
+      "python": ".venv/bin/python",
+      "workdir": "/app"
     },
     "simplerca": {
-      "display_name": "SimpleRCA", "image_ref": "simplerca", "scope": "all",
+      "display_name": "SimpleRCA",
+      "image_ref": "simplerca",
+      "scope": "all",
       "schedule_priority": 20,
-      "workers": 4, "cpus_per_worker": 2, "timeout_seconds": 300,
-      "python": ".venv/bin/python", "workdir": "/app"
+      "workers": 4,
+      "cpus_per_worker": 2,
+      "timeout_seconds": 300,
+      "python": ".venv/bin/python",
+      "workdir": "/app"
     }
   }
 }
