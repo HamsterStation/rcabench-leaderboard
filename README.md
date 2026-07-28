@@ -40,6 +40,11 @@ original dataset redistribution terms have been confirmed.
 7. Metrics are validated, archived under `results/history/`, promoted to
    `results/leaderboard.json`, and deployed by `pages.yml`.
 
+Dataset PRs first pass a cloud-only schema, immutable Hugging Face revision,
+manifest partition, and sampled ground-truth check. Fork PRs never receive secrets or
+run on the self-hosted server. After maintainer promotion to a trusted same-repository
+branch, the PR expands to every registered algorithm and follows the metric/merge gate.
+
 The registry contains BARO, ART, Eadro, CausalRCA, DiagFusion, MicroDig,
 MicroHECL, MicroRank, MicroRCA, Nezha, ShapleyIQ, and SimpleRCA. DiagFusion's
 released container uses its bundled checkpoint; those rows are marked with
@@ -65,8 +70,8 @@ system, fault, service, and fault-service marginals:
 ```bash
 rcabench-leaderboard download --config config/ops-lite.json \
   --output .cache/datasets/ops-lite
-rcabench-leaderboard normalize-ops-lite --config config/ops-lite.json \
-  --snapshot .cache/datasets/ops-lite
+rcabench-leaderboard normalize --adapter ops-lite \
+  --config config/ops-lite.json --snapshot .cache/datasets/ops-lite
 ```
 
 Run BARO on the first five cases:
@@ -106,5 +111,5 @@ rcabench-leaderboard prepare eadro --snapshot .cache/datasets/v1.0.0
 
 ## Operations
 
-See [docs/SETUP.zh-CN.md](docs/SETUP.zh-CN.md) for Hugging Face upload,
-GitHub secrets, self-hosted runner setup, update flow, and recovery steps.
+See [docs/SETUP.zh-CN.md](docs/SETUP.zh-CN.md) for deployment and recovery, and
+[docs/DATASET_PR.zh-CN.md](docs/DATASET_PR.zh-CN.md) for the generic dataset PR flow.

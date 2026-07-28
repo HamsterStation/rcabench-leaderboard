@@ -155,9 +155,10 @@ jobs:
             [[ "$attempt" -lt 12 ]] || exit 1
             sleep $((attempt * 15))
           done
-      - name: Normalize OPS-Lite
-        if: matrix.benchmark == 'ops-lite'
-        run: rcabench-leaderboard normalize-ops-lite --config "$BENCHMARK_CONFIG" --snapshot "$DATASET_DIR"
+      - name: Prepare dataset adapter
+        run: >-
+          rcabench-leaderboard normalize --adapter '${{ matrix.adapter }}'
+          --config "$BENCHMARK_CONFIG" --snapshot "$DATASET_DIR"
       - name: Pull algorithm image
         run: |
           IMAGE=$(python -c 'import os; from rcabench_leaderboard.config import load_config; print(load_config(os.environ["BENCHMARK_CONFIG"])["algorithms"]["${{ matrix.algorithm }}"]["image"])')

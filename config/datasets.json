@@ -3,11 +3,13 @@
   "datasets": {
     "fse": {
       "config": "benchmark.json",
+      "adapter": "native",
       "watch": true,
-      "update_adapter": "fse"
+      "update_adapter": "native"
     },
     "ops-lite": {
       "config": "ops-lite.json",
+      "adapter": "ops-lite",
       "watch": true,
       "update_adapter": "ops-lite"
     }

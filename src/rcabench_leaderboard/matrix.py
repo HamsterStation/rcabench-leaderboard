@@ -48,6 +48,7 @@ def benchmark_matrix(
         {
             "benchmark": benchmark,
             "config": (path.parent / datasets[benchmark]["config"]).as_posix(),
+            "adapter": datasets[benchmark]["adapter"],
             "algorithm": algorithm,
             "prepare": bool(config["algorithms"][algorithm].get("preparation")),
         }

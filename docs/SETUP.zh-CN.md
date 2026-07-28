@@ -101,8 +101,8 @@ OPS-Lite 是公开数据集，不需要 `HF_TOKEN`。流水线固定到 commit
 ```bash
 rcabench-leaderboard download --config config/ops-lite.json \
   --output /mnt/jfs-fixed/ops-lite-9ac09981
-rcabench-leaderboard normalize-ops-lite --config config/ops-lite.json \
-  --snapshot /mnt/jfs-fixed/ops-lite-9ac09981
+rcabench-leaderboard normalize --adapter ops-lite \
+  --config config/ops-lite.json --snapshot /mnt/jfs-fixed/ops-lite-9ac09981
 ```
 
 生成的 400/100 划分使用 seed 42，同时平衡 system、fault type、service 和
@@ -122,11 +122,15 @@ nohup bash scripts/run_ops_lite_server.sh \
 
 ## 2. 数据更新
 
-新数据必须使用新的不可变版本，例如 `v1.1.0`：
+新增任意数据集的完整步骤、配置格式和 fork 安全边界见
+[`DATASET_PR.zh-CN.md`](DATASET_PR.zh-CN.md)。
+
+新数据必须固定到新的 40 位 Hugging Face commit SHA；可以额外创建 `v1.1.0`
+这类便于阅读的 tag，但配置不能使用 tag：
 
 1. 重新生成 train/test manifests 和 `summary.json`；
-2. 修改 `config/benchmark.json` 中的 revision、manifest SHA256 和数量；
-3. 用上传脚本发布新版本并创建 tag；
+2. 上传新版本并取得实际 commit SHA，可按需创建 tag；
+3. 修改 `config/benchmark.json` 中的 revision、manifest SHA256 和数量；
 4. 提交配置 PR；
 5. 合并后触发全量评测。
 

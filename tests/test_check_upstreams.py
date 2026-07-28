@@ -1,5 +1,7 @@
 import importlib.util
 import json
+import shutil
+import subprocess
 from pathlib import Path
 
 
@@ -51,3 +53,33 @@ def test_build_definition_ignores_watcher_metadata():
     assert plan_pr_benchmark._build_definition(base) == plan_pr_benchmark._build_definition(
         {**base, "watch": False}
     )
+
+
+def test_new_dataset_expands_to_every_registered_algorithm(tmp_path):
+    root = Path(__file__).parents[1]
+    shutil.copytree(root / "config", tmp_path / "config")
+    subprocess.run(["git", "init", "-q"], cwd=tmp_path, check=True)
+    subprocess.run(["git", "config", "user.email", "test@example.com"], cwd=tmp_path, check=True)
+    subprocess.run(["git", "config", "user.name", "Test"], cwd=tmp_path, check=True)
+    subprocess.run(["git", "add", "config"], cwd=tmp_path, check=True)
+    subprocess.run(["git", "commit", "-qm", "base"], cwd=tmp_path, check=True)
+
+    config = json.loads((tmp_path / "config/ops-lite.json").read_text())
+    config["benchmark"]["id"] = "candidate-seed42"
+    config["benchmark"]["title"] = "Candidate"
+    config["dataset"]["repo_id"] = "example/candidate"
+    (tmp_path / "config/candidate.json").write_text(json.dumps(config))
+    registry_path = tmp_path / "config/datasets.json"
+    registry = json.loads(registry_path.read_text())
+    registry["datasets"]["candidate"] = {
+        "config": "candidate.json",
+        "adapter": "ops-lite",
+        "watch": False,
+    }
+    registry_path.write_text(json.dumps(registry))
+
+    report = plan_pr_benchmark.plan("HEAD", tmp_path)
+    assert report["changed_datasets"] == ["candidate"]
+    assert len(report["matrix"]) == 12
+    assert {row["benchmark"] for row in report["matrix"]} == {"candidate"}
+    assert {row["adapter"] for row in report["matrix"]} == {"ops-lite"}
