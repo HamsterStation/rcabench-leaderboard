@@ -260,5 +260,24 @@ jobs:
           git commit -m 'results: attach validated PR metrics [skip ci]'
           git pull --rebase origin "$HEAD_REF"
           git push origin HEAD:"$HEAD_REF"
-          gh pr merge '${{ needs.metadata.outputs.number }}' --repo '${{ github.repository }}' \
-            --squash --delete-branch
+          # GitHub can briefly report UNKNOWN mergeability immediately after the push.
+          # Wait for that asynchronous check instead of losing a valid evaluation result.
+          for attempt in {1..24}; do
+            if gh pr merge '${{ needs.metadata.outputs.number }}' \
+              --repo '${{ github.repository }}' --squash --delete-branch; then
+              exit 0
+            fi
+            state=$(gh pr view '${{ needs.metadata.outputs.number }}' \
+              --repo '${{ github.repository }}' --json mergeStateStatus \
+              --jq '.mergeStateStatus')
+            case "$state" in
+              DIRTY|BLOCKED)
+                echo "PR cannot be merged: $state" >&2
+                exit 1
+                ;;
+            esac
+            echo "Waiting for GitHub mergeability calculation ($state, attempt $attempt/24)"
+            sleep 5
+          done
+          echo 'Timed out waiting for GitHub to calculate PR mergeability' >&2
+          exit 1
