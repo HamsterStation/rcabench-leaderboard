@@ -11,7 +11,6 @@ on:
   workflow_run:
     workflows: [Full benchmark, Import server results, Evaluate benchmark PR]
     types: [completed]
-    branches: [main]
 
 permissions:
   contents: read
