@@ -30,7 +30,8 @@
     "microdig": {
       "source": "https://github.com/LGU-SE-Internal/MicroDig.git",
       "commit": "a25df3803194b1da1120985c61f5f2c9ee290fbc",
-      "image": "ghcr.io/hamsterstation/rcabench-microdig:a25df380"
+      "image": "ghcr.io/hamsterstation/rcabench-microdig:a25df380-r1",
+      "tag_suffix": "-r1"
     },
     "nezha": {
       "source": "https://github.com/LGU-SE-Internal/Nezha.git",
