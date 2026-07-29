@@ -26,7 +26,8 @@ def test_benchmark_matrix_filters_and_rejects_unknown_names():
         benchmark_matrix(ROOT / "config/datasets.json", algorithms="missing")
 
 
-def test_image_matrix_deduplicates_the_shared_shapleyiq_container():
+def test_image_matrix_keeps_microhecl_independent_from_shapleyiq():
     matrix = image_matrix(ROOT / "config/algorithms.json")
-    assert len(matrix) == 9
+    assert len(matrix) == 10
+    assert [row["name"] for row in matrix].count("microhecl") == 1
     assert [row["name"] for row in matrix].count("shapleyiq") == 1
