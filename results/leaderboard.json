@@ -1,6 +1,6 @@
 {
   "schema_version": 2,
-  "generated_at": "2026-07-29T04:45:26.570382Z",
+  "generated_at": "2026-07-29T09:24:08.837491Z",
   "benchmarks": [
     {
       "benchmark": {
@@ -15,23 +15,26 @@
         {
           "algorithm": "microdig",
           "display_name": "MicroDig",
-          "algorithm_commit": "a25df3803194b1da1120985c61f5f2c9ee290fbc",
+          "algorithm_commit": "c721191dbe52f6921aed73426608796ef6130023",
           "scope": "all",
           "cases": 1422,
-          "run_id": "pr-8-1a678a9f192f03b1f2bf3db8b8ddd5c3d3aec1c8",
+          "run_id": "pr-10-e48054eb0f39411bb9385b1db0cf5baf52d34ac2",
           "metrics": {
             "algorithm_error_case_names": [],
             "algorithm_error_cases": 0,
-            "average_algorithm_seconds": 16.233572900232385,
+            "average_algorithm_seconds": 16.02386413526796,
             "avg@3": 0.6472105016408815,
             "avg@5": 0.7011251758087201,
             "deduplicate_services": true,
             "duplicate_ranking_cases": 0,
+            "empty_ranking_case_names": [],
+            "empty_ranking_cases": 0,
             "invalid_case_names": [],
             "invalid_cases": 0,
             "missing_case_names": [],
             "missing_cases": 0,
             "mrr": 0.6360753912441687,
+            "non_empty_ranking_cases": 1422,
             "requested_cases": 1422,
             "schema_version": 1,
             "successful_result_files": 1422,
@@ -265,6 +268,37 @@
           }
         },
         {
+          "algorithm": "microdig",
+          "display_name": "MicroDig",
+          "algorithm_commit": "c721191dbe52f6921aed73426608796ef6130023",
+          "scope": "all",
+          "cases": 500,
+          "run_id": "pr-10-e48054eb0f39411bb9385b1db0cf5baf52d34ac2",
+          "metrics": {
+            "algorithm_error_case_names": [],
+            "algorithm_error_cases": 0,
+            "average_algorithm_seconds": 10.472995103690772,
+            "avg@3": 0.072,
+            "avg@5": 0.1316,
+            "deduplicate_services": true,
+            "duplicate_ranking_cases": 0,
+            "empty_ranking_case_names": [],
+            "empty_ranking_cases": 0,
+            "invalid_case_names": [],
+            "invalid_cases": 0,
+            "missing_case_names": [],
+            "missing_cases": 0,
+            "mrr": 0.10118968253968262,
+            "non_empty_ranking_cases": 500,
+            "requested_cases": 500,
+            "schema_version": 1,
+            "successful_result_files": 500,
+            "top@1": 0.022,
+            "top@3": 0.126,
+            "top@5": 0.264
+          }
+        },
+        {
           "algorithm": "art",
           "display_name": "ART",
           "algorithm_commit": "ba8dfd3f0054cf90af3135dcdfa0f7a339ab254d",
@@ -294,34 +328,6 @@
             "top@1": 0.04,
             "top@3": 0.12,
             "top@5": 0.17
-          }
-        },
-        {
-          "algorithm": "microdig",
-          "display_name": "MicroDig",
-          "algorithm_commit": "a25df3803194b1da1120985c61f5f2c9ee290fbc",
-          "scope": "all",
-          "cases": 500,
-          "run_id": "pr-8-1a678a9f192f03b1f2bf3db8b8ddd5c3d3aec1c8",
-          "metrics": {
-            "algorithm_error_case_names": [],
-            "algorithm_error_cases": 0,
-            "average_algorithm_seconds": 10.337573659654707,
-            "avg@3": 0.0,
-            "avg@5": 0.0,
-            "deduplicate_services": true,
-            "duplicate_ranking_cases": 0,
-            "invalid_case_names": [],
-            "invalid_cases": 0,
-            "missing_case_names": [],
-            "missing_cases": 0,
-            "mrr": 0.0,
-            "requested_cases": 500,
-            "schema_version": 1,
-            "successful_result_files": 500,
-            "top@1": 0.0,
-            "top@3": 0.0,
-            "top@5": 0.0
           }
         }
       ]
