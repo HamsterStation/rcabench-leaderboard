@@ -98,11 +98,18 @@ jobs:
           git -C algorithm checkout --detach FETCH_HEAD
           test "$(git -C algorithm rev-parse HEAD)" = '${{ matrix.commit }}'
       - uses: docker/setup-buildx-action@v3
-      - uses: docker/login-action@v3
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Log in to GitHub Container Registry
+        env:
+          GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # GHCR occasionally drops a TLS handshake; retry without exposing the token.
+          for attempt in {1..12}; do
+            if printf '%s' "$GHCR_TOKEN" | docker login ghcr.io --username '${{ github.actor }}' --password-stdin; then
+              exit 0
+            fi
+            [[ "$attempt" -lt 12 ]] || exit 1
+            sleep $((attempt * 5))
+          done
       - uses: docker/build-push-action@v6
         with:
           context: algorithm
@@ -141,11 +148,18 @@ jobs:
           SAFE_REVISION=$(printf '%s' "$REVISION" | tr -c 'A-Za-z0-9_.-' '-')
           echo "BENCHMARK_CONFIG=${{ matrix.config }}" >> "$GITHUB_ENV"
           echo "DATASET_DIR=$RCABENCH_STORAGE/datasets/${{ matrix.benchmark }}-$SAFE_REVISION" >> "$GITHUB_ENV"
-      - uses: docker/login-action@v3
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Log in to GitHub Container Registry
+        env:
+          GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # Retry a transient registry handshake before touching cached data or results.
+          for attempt in {1..12}; do
+            if printf '%s' "$GHCR_TOKEN" | docker login ghcr.io --username '${{ github.actor }}' --password-stdin; then
+              exit 0
+            fi
+            [[ "$attempt" -lt 12 ]] || exit 1
+            sleep $((attempt * 5))
+          done
       - name: Download pinned dataset
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
