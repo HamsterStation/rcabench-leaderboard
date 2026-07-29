@@ -29,9 +29,9 @@
     },
     "microdig": {
       "source": "https://github.com/LGU-SE-Internal/MicroDig.git",
-      "commit": "a25df3803194b1da1120985c61f5f2c9ee290fbc",
-      "image": "ghcr.io/hamsterstation/rcabench-microdig:a25df380-r1",
-      "tag_suffix": "-r1"
+      "commit": "c721191dbe52f6921aed73426608796ef6130023",
+      "image": "ghcr.io/hamsterstation/rcabench-microdig:c721191d-r2",
+      "tag_suffix": "-r2"
     },
     "nezha": {
       "source": "https://github.com/LGU-SE-Internal/Nezha.git",

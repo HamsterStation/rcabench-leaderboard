@@ -18,7 +18,7 @@ from .config import (
 )
 from .datasets import format_metadata, normalize_dataset
 from .download import download_dataset
-from .evaluation import evaluate, write_metrics
+from .evaluation import evaluate, quality_gate_failures, write_metrics
 from .prepare import prepare_assets
 from .records import build_site, record_metrics
 from .runner import run_benchmark
@@ -180,9 +180,12 @@ def command_evaluate(args: argparse.Namespace) -> None:
     write_metrics(args.output, metrics)
     print(json.dumps(metrics, indent=2))
     max_algorithm_errors = int(algorithm.get("max_algorithm_errors", 0))
-    incomplete = metrics["missing_cases"] or metrics["invalid_cases"]
-    too_many_errors = metrics["algorithm_error_cases"] > max_algorithm_errors
-    if args.require_complete and (incomplete or too_many_errors):
+    failures = quality_gate_failures(
+        metrics, max_algorithm_errors=max_algorithm_errors
+    )
+    if args.require_complete and failures:
+        for failure in failures:
+            print(f"quality gate failed: {failure}", file=sys.stderr)
         raise SystemExit(2)
 
 
