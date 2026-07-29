@@ -38,6 +38,7 @@ def evaluate(
     durations: list[float] = []
     missing: list[str] = []
     invalid: list[str] = []
+    empty_ranking_names: list[str] = []
     duplicate_ranking_cases = 0
     algorithm_error_names: list[str] = []
 
@@ -56,6 +57,8 @@ def evaluate(
             if not truth:
                 raise ValueError("empty ground-truth service")
             ranking, had_duplicates = _ranked_services(result, deduplicate_services)
+            if not ranking:
+                empty_ranking_names.append(case)
             duplicate_ranking_cases += int(had_duplicates)
             first_hit = next(
                 (position for position, name in enumerate(ranking, start=1) if name in truth),
@@ -80,6 +83,12 @@ def evaluate(
         "invalid_cases": len(invalid),
         "missing_case_names": missing,
         "invalid_case_names": invalid,
+        "empty_ranking_cases": len(empty_ranking_names),
+        "empty_ranking_case_names": empty_ranking_names,
+        "non_empty_ranking_cases": denominator
+        - len(missing)
+        - len(invalid)
+        - len(empty_ranking_names),
         "deduplicate_services": deduplicate_services,
         "duplicate_ranking_cases": duplicate_ranking_cases,
         "algorithm_error_cases": len(algorithm_error_names),
@@ -100,3 +109,18 @@ def write_metrics(path: str | Path, metrics: dict[str, Any]) -> None:
     temporary = output.with_suffix(output.suffix + ".tmp")
     temporary.write_text(json.dumps(metrics, indent=2, sort_keys=True) + "\n")
     temporary.replace(output)
+
+
+def quality_gate_failures(
+    metrics: dict[str, Any], *, max_algorithm_errors: int = 0
+) -> list[str]:
+    failures: list[str] = []
+    if metrics["missing_cases"] or metrics["invalid_cases"]:
+        failures.append("benchmark results are incomplete or invalid")
+    if metrics["algorithm_error_cases"] > max_algorithm_errors:
+        failures.append("algorithm error count exceeds the configured limit")
+    if metrics["requested_cases"] > 0 and not metrics["non_empty_ranking_cases"]:
+        failures.append("every case returned an empty ranking")
+    if metrics["requested_cases"] > 0 and metrics["top@5"] == 0:
+        failures.append("no ground-truth service appeared in any top-5")
+    return failures
