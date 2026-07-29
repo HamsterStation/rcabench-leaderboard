@@ -1,6 +1,6 @@
 {
   "schema_version": 2,
-  "generated_at": "2026-07-28T16:18:22.921920Z",
+  "generated_at": "2026-07-29T04:45:26.570382Z",
   "benchmarks": [
     {
       "benchmark": {
@@ -12,6 +12,34 @@
         "dataset_revision": "588165081264b3de851b7b3b7ec59d27a5258107ad04c56d8c1c3f2a5ff76da7"
       },
       "entries": [
+        {
+          "algorithm": "microdig",
+          "display_name": "MicroDig",
+          "algorithm_commit": "a25df3803194b1da1120985c61f5f2c9ee290fbc",
+          "scope": "all",
+          "cases": 1422,
+          "run_id": "pr-8-1a678a9f192f03b1f2bf3db8b8ddd5c3d3aec1c8",
+          "metrics": {
+            "algorithm_error_case_names": [],
+            "algorithm_error_cases": 0,
+            "average_algorithm_seconds": 16.233572900232385,
+            "avg@3": 0.6472105016408815,
+            "avg@5": 0.7011251758087201,
+            "deduplicate_services": true,
+            "duplicate_ranking_cases": 0,
+            "invalid_case_names": [],
+            "invalid_cases": 0,
+            "missing_case_names": [],
+            "missing_cases": 0,
+            "mrr": 0.6360753912441687,
+            "requested_cases": 1422,
+            "schema_version": 1,
+            "successful_result_files": 1422,
+            "top@1": 0.5147679324894515,
+            "top@3": 0.7489451476793249,
+            "top@5": 0.7848101265822784
+          }
+        },
         {
           "algorithm": "simplerca",
           "display_name": "SimpleRCA",
@@ -266,6 +294,34 @@
             "top@1": 0.04,
             "top@3": 0.12,
             "top@5": 0.17
+          }
+        },
+        {
+          "algorithm": "microdig",
+          "display_name": "MicroDig",
+          "algorithm_commit": "a25df3803194b1da1120985c61f5f2c9ee290fbc",
+          "scope": "all",
+          "cases": 500,
+          "run_id": "pr-8-1a678a9f192f03b1f2bf3db8b8ddd5c3d3aec1c8",
+          "metrics": {
+            "algorithm_error_case_names": [],
+            "algorithm_error_cases": 0,
+            "average_algorithm_seconds": 10.337573659654707,
+            "avg@3": 0.0,
+            "avg@5": 0.0,
+            "deduplicate_services": true,
+            "duplicate_ranking_cases": 0,
+            "invalid_case_names": [],
+            "invalid_cases": 0,
+            "missing_case_names": [],
+            "missing_cases": 0,
+            "mrr": 0.0,
+            "requested_cases": 500,
+            "schema_version": 1,
+            "successful_result_files": 500,
+            "top@1": 0.0,
+            "top@3": 0.0,
+            "top@5": 0.0
           }
         }
       ]
