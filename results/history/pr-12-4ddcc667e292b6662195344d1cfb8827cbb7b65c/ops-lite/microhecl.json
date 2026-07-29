@@ -1,0 +1,31 @@
+{
+  "algorithm": "microhecl",
+  "display_name": "MicroHECL",
+  "algorithm_commit": "ceac113d2d1a3a571013ca58358e8b9f9e61933f",
+  "scope": "all",
+  "cases": 500,
+  "run_id": "pr-12-4ddcc667e292b6662195344d1cfb8827cbb7b65c",
+  "metrics": {
+    "algorithm_error_case_names": [],
+    "algorithm_error_cases": 0,
+    "average_algorithm_seconds": 6.610973623208702,
+    "avg@3": 0.13133333333333333,
+    "avg@5": 0.16319999999999998,
+    "deduplicate_services": true,
+    "duplicate_ranking_cases": 0,
+    "empty_ranking_case_names": [],
+    "empty_ranking_cases": 0,
+    "invalid_case_names": [],
+    "invalid_cases": 0,
+    "missing_case_names": [],
+    "missing_cases": 0,
+    "mrr": 0.1327524531024532,
+    "non_empty_ranking_cases": 500,
+    "requested_cases": 500,
+    "schema_version": 1,
+    "successful_result_files": 500,
+    "top@1": 0.072,
+    "top@3": 0.182,
+    "top@5": 0.216
+  }
+}
