@@ -39,6 +39,12 @@
       "image": "ghcr.io/hamsterstation/rcabench-microhecl:ceac113d-r1",
       "tag_suffix": "-r1"
     },
+    "microrank": {
+      "source": "https://github.com/LGU-SE-Internal/ShapleyIQ.git",
+      "commit": "ceac113d2d1a3a571013ca58358e8b9f9e61933f",
+      "image": "ghcr.io/hamsterstation/rcabench-microrank:ceac113d-r1",
+      "tag_suffix": "-r1"
+    },
     "nezha": {
       "source": "https://github.com/LGU-SE-Internal/Nezha.git",
       "commit": "f0de4db8123a566e13c5fcfe6ac0d9137009f99a",
@@ -95,7 +101,7 @@
       "python": ".venv/bin/python", "workdir": "/app"
     },
     "microrank": {
-      "display_name": "MicroRank", "image_ref": "shapleyiq", "scope": "all",
+      "display_name": "MicroRank", "image_ref": "microrank", "scope": "all",
       "schedule_priority": 50,
       "workers": 4, "cpus_per_worker": 2, "timeout_seconds": 600,
       "python": ".venv/bin/python", "workdir": "/app"

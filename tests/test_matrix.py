@@ -26,9 +26,10 @@ def test_benchmark_matrix_filters_and_rejects_unknown_names():
         benchmark_matrix(ROOT / "config/datasets.json", algorithms="missing")
 
 
-def test_image_matrix_keeps_microhecl_independent_from_shapleyiq():
+def test_image_matrix_keeps_paper_algorithms_independent_from_shapleyiq():
     matrix = image_matrix(ROOT / "config/algorithms.json")
-    assert len(matrix) == 10
+    assert len(matrix) == 11
     names = [row["name"] for row in matrix]
     assert names.count("microhecl") == 1
+    assert names.count("microrank") == 1
     assert names.count("shapleyiq") == 1
