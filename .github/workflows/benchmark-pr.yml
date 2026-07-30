@@ -27,6 +27,8 @@ concurrency:
 
 env:
   RCABENCH_STORAGE: ${{ vars.RCABENCH_STORAGE || '/mnt/jfs-fixed/rcabench-ci' }}
+  RCABENCH_RUN_STORAGE: ${{ vars.RCABENCH_RUN_STORAGE || vars.RCABENCH_STORAGE || '/mnt/jfs-fixed/rcabench-ci' }}
+  RCABENCH_REUSE_PREPARED_DATASETS: ${{ vars.RCABENCH_REUSE_PREPARED_DATASETS || 'false' }}
 
 jobs:
   metadata:
@@ -148,6 +150,26 @@ jobs:
           SAFE_REVISION=$(printf '%s' "$REVISION" | tr -c 'A-Za-z0-9_.-' '-')
           echo "BENCHMARK_CONFIG=${{ matrix.config }}" >> "$GITHUB_ENV"
           echo "DATASET_DIR=$RCABENCH_STORAGE/datasets/${{ matrix.benchmark }}-$SAFE_REVISION" >> "$GITHUB_ENV"
+      - name: Validate prepared read-only dataset cache
+        if: env.RCABENCH_REUSE_PREPARED_DATASETS == 'true'
+        run: |
+          MANIFEST=$(python -c 'import os; from rcabench_leaderboard.config import load_config; print(load_config(os.environ["BENCHMARK_CONFIG"])["dataset"]["manifests"]["all"])')
+          EXPECTED=$(python -c 'import os; from rcabench_leaderboard.config import load_config; print(load_config(os.environ["BENCHMARK_CONFIG"])["dataset"]["expected_cases"]["all"])')
+          MANIFEST_PATH="$DATASET_DIR/$MANIFEST"
+          [[ -s "$MANIFEST_PATH" ]] || { echo "Missing prepared manifest: $MANIFEST_PATH" >&2; exit 1; }
+          ACTUAL=$(awk 'NF { count += 1 } END { print count + 0 }' "$MANIFEST_PATH")
+          [[ "$ACTUAL" -eq "$EXPECTED" ]] || {
+            echo "Prepared manifest has $ACTUAL cases; expected $EXPECTED" >&2
+            exit 1
+          }
+          while IFS= read -r case; do
+            [[ -z "$case" ]] && continue
+            converted="$DATASET_DIR/$case/converted"
+            [[ -s "$converted/injection.json" && -s "$converted/env.json" ]] || {
+              echo "Prepared case is incomplete: $case" >&2
+              exit 1
+            }
+          done < "$MANIFEST_PATH"
       - name: Log in to GitHub Container Registry
         env:
           GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -161,6 +183,7 @@ jobs:
             sleep $((attempt * 5))
           done
       - name: Download pinned dataset
+        if: env.RCABENCH_REUSE_PREPARED_DATASETS != 'true'
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
           LOCAL_DATA_ROOT: ${{ matrix.benchmark == 'fse' && vars.RCABENCH_FSE_DATA_ROOT || '' }}
@@ -194,6 +217,7 @@ jobs:
             done
           fi
       - name: Prepare dataset adapter
+        if: env.RCABENCH_REUSE_PREPARED_DATASETS != 'true'
         run: >-
           rcabench-leaderboard normalize --adapter '${{ matrix.adapter }}'
           --config "$BENCHMARK_CONFIG" --snapshot "$DATASET_DIR"
@@ -217,7 +241,7 @@ jobs:
         run: |
           ASSET_ARGS=()
           [[ -z '${{ steps.prepare.outputs.assets }}' ]] || ASSET_ARGS=(--assets '${{ steps.prepare.outputs.assets }}')
-          RUN_ROOT="$RCABENCH_STORAGE/runs/pr-${{ needs.metadata.outputs.number }}/${{ needs.metadata.outputs.head_sha }}/${{ matrix.benchmark }}/${{ matrix.algorithm }}"
+          RUN_ROOT="$RCABENCH_RUN_STORAGE/runs/pr-${{ needs.metadata.outputs.number }}/${{ needs.metadata.outputs.head_sha }}/${{ matrix.benchmark }}/${{ matrix.algorithm }}"
           mkdir -p "$RUN_ROOT"
           rcabench-leaderboard run '${{ matrix.algorithm }}' \
             --config "$BENCHMARK_CONFIG" --snapshot "$DATASET_DIR" \
