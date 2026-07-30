@@ -53,8 +53,8 @@
     },
     "nezha": {
       "source": "https://github.com/LGU-SE-Internal/Nezha.git",
-      "commit": "71441961ec1e0b18309f741a6e7d6c0564f6c050",
-      "image": "ghcr.io/hamsterstation/rcabench-nezha:71441961-r1",
+      "commit": "89907e0929d63e2f504bac4f7d432f35e6927e0e",
+      "image": "ghcr.io/hamsterstation/rcabench-nezha:89907e09-r1",
       "tag_suffix": "-r1",
       "watch": false
     },
