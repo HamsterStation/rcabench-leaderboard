@@ -33,6 +33,8 @@ def test_repository_config_is_valid():
     assert config["dataset"]["expected_cases"]["all"] == 1422
     assert config["algorithms"]["microhecl"]["image"] != config["algorithms"]["shapleyiq"]["image"]
     assert config["algorithms"]["microhecl"]["image"].endswith("microhecl:ceac113d-r1")
+    assert config["algorithms"]["microrank"]["image"] != config["algorithms"]["shapleyiq"]["image"]
+    assert config["algorithms"]["microrank"]["image"].endswith("microrank:ceac113d-r1")
 
 
 def test_ops_lite_config_is_valid():

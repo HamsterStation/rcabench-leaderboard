@@ -1,0 +1,31 @@
+{
+  "algorithm": "microrank",
+  "display_name": "MicroRank",
+  "algorithm_commit": "ceac113d2d1a3a571013ca58358e8b9f9e61933f",
+  "scope": "all",
+  "cases": 1422,
+  "run_id": "pr-13-e373c22bc7833bde874e4f40c93697418bc9bc32",
+  "metrics": {
+    "algorithm_error_case_names": [],
+    "algorithm_error_cases": 0,
+    "average_algorithm_seconds": 10.01649542393637,
+    "avg@3": 0.23699015471167373,
+    "avg@5": 0.31167369901547115,
+    "deduplicate_services": true,
+    "duplicate_ranking_cases": 0,
+    "empty_ranking_case_names": [],
+    "empty_ranking_cases": 0,
+    "invalid_case_names": [],
+    "invalid_cases": 0,
+    "missing_case_names": [],
+    "missing_cases": 0,
+    "mrr": 0.298590778698893,
+    "non_empty_ranking_cases": 1422,
+    "requested_cases": 1422,
+    "schema_version": 1,
+    "successful_result_files": 1422,
+    "top@1": 0.1350210970464135,
+    "top@3": 0.3206751054852321,
+    "top@5": 0.45358649789029537
+  }
+}
