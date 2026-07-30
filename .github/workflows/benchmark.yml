@@ -21,11 +21,11 @@ jobs:
         shell: bash
         run: |
           set -Eeuo pipefail
-          IMAGE=ghcr.io/hamsterstation/rcabench-nezha:f0de4db8-r1
+          IMAGE=ghcr.io/hamsterstation/rcabench-nezha:71441961-r1
           REPO="$GITHUB_WORKSPACE"
           FSE=/mnt/jfs-fixed/rcabench-ci/datasets/fse-v1.0.0/ts4-ts-ui-dashboard-request-delay-9gnvk2
           OPS=/mnt/jfs-fixed/rcabench-ci/datasets/ops-lite-9ac09981c08ab02a0b923eab7830d778934851a8
-          SMOKE=/home/nn/rcabench-smoke/nezha-f0de4db8-r1
+          SMOKE=/home/nn/rcabench-smoke/nezha-71441961-r1
           mkdir -p "$SMOKE"
           docker pull "$IMAGE"
 
@@ -72,5 +72,5 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           name: nezha-cross-system-smoke
-          path: /home/nn/rcabench-smoke/nezha-f0de4db8-r1
+          path: /home/nn/rcabench-smoke/nezha-71441961-r1
           if-no-files-found: error
