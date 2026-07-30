@@ -2,201 +2,72 @@ name: Full benchmark
 
 on:
   workflow_dispatch:
-    inputs:
-      benchmarks:
-        description: "Comma-separated registered benchmarks or all"
-        required: true
-        default: all
-      algorithms:
-        description: "Comma-separated registered algorithms or all"
-        required: true
-        default: all
-  repository_dispatch:
-    types: [dataset-updated, algorithm-updated]
 
 permissions:
-  contents: write
+  contents: read
   packages: read
 
-concurrency:
-  group: full-benchmark
-  cancel-in-progress: false
-
-env:
-  RCABENCH_STORAGE: ${{ vars.RCABENCH_STORAGE || '/mnt/jfs-fixed/rcabench-ci' }}
-
 jobs:
-  plan:
-    if: vars.BENCHMARK_ENABLED == 'true'
-    runs-on: ubuntu-latest
-    outputs:
-      matrix: ${{ steps.matrix.outputs.matrix }}
-    steps:
-      - uses: actions/checkout@v4
-      - id: matrix
-        env:
-          REQUESTED_BENCHMARKS: ${{ inputs.benchmarks || github.event.client_payload.benchmarks || 'all' }}
-          REQUESTED_ALGORITHMS: ${{ inputs.algorithms || github.event.client_payload.algorithms || 'all' }}
-        run: |
-          MATRIX=$(PYTHONPATH=src python -m rcabench_leaderboard.matrix benchmarks \
-            --benchmarks "$REQUESTED_BENCHMARKS" --algorithms "$REQUESTED_ALGORITHMS")
-          echo "matrix=$MATRIX" >> "$GITHUB_OUTPUT"
-
-  evaluate:
-    needs: plan
-    strategy:
-      fail-fast: false
-      max-parallel: 1
-      matrix:
-        include: ${{ fromJSON(needs.plan.outputs.matrix) }}
+  smoke-microrca:
     runs-on: [self-hosted, linux, x64, rcabench]
     steps:
       - uses: actions/checkout@v4
-      - name: Set up runner Python
-        shell: bash
-        run: |
-          BASE_PYTHON='${{ vars.RCABENCH_PYTHON || '/mnt/jfs-fixed/rcabench-venv/bin/python' }}'
-          if [[ ! -x "$BASE_PYTHON" ]]; then
-            echo "Python is unavailable at $BASE_PYTHON" >&2
-            exit 1
-          fi
-          "$BASE_PYTHON" -m venv "$RUNNER_TEMP/rcabench-venv"
-          echo "$RUNNER_TEMP/rcabench-venv/bin" >> "$GITHUB_PATH"
-      - name: Install benchmark controller
-        run: python -m pip install -e .
-      - name: Resolve versioned cache paths
-        env:
-          BENCHMARK_CONFIG: ${{ matrix.config }}
-        run: |
-          REVISION=$(python -c 'import os; from rcabench_leaderboard.config import load_config; print(load_config(os.environ["BENCHMARK_CONFIG"])["dataset"]["revision"])')
-          SAFE_REVISION=$(printf '%s' "$REVISION" | tr -c 'A-Za-z0-9_.-' '-')
-          echo "BENCHMARK_CONFIG=${{ matrix.config }}" >> "$GITHUB_ENV"
-          echo "DATASET_DIR=$RCABENCH_STORAGE/datasets/${{ matrix.benchmark }}-$SAFE_REVISION" >> "$GITHUB_ENV"
-      - name: Log in to GHCR
-        uses: docker/login-action@v3
+      - uses: docker/login-action@v3
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
-      - name: Download pinned dataset snapshot
-        env:
-          HF_TOKEN: ${{ secrets.HF_TOKEN }}
-          LOCAL_DATA_ROOT: ${{ matrix.benchmark == 'fse' && vars.RCABENCH_FSE_DATA_ROOT || '' }}
-          LOCAL_MANIFESTS: ${{ matrix.benchmark == 'fse' && vars.RCABENCH_FSE_MANIFESTS || '' }}
+      - name: Run cross-system MicroRCA smoke tests
+        shell: bash
         run: |
-          mkdir -p "$DATASET_DIR"
-          if [[ -n "$LOCAL_DATA_ROOT" || -n "$LOCAL_MANIFESTS" ]]; then
-            [[ -d "$LOCAL_DATA_ROOT" && -d "$LOCAL_MANIFESTS" ]] || {
-              echo "Both local dataset cache paths must exist" >&2
-              exit 1
-            }
-            mkdir -p "$DATASET_DIR/manifests"
-            for split in all train test; do
-              source="$LOCAL_MANIFESTS/$split.txt"
-              target="$DATASET_DIR/manifests/$split.txt"
-              [[ -f "$source" ]] || { echo "Missing $source" >&2; exit 1; }
-              [[ -e "$target" || -L "$target" ]] || ln -s "$source" "$target"
-            done
-            while IFS= read -r case; do
-              [[ -z "$case" ]] && continue
-              source="$LOCAL_DATA_ROOT/$case"
-              target="$DATASET_DIR/$case"
-              [[ -d "$source" ]] || { echo "Missing local case $source" >&2; exit 1; }
-              [[ -e "$target" || -L "$target" ]] || ln -s "$source" "$target"
-            done < "$LOCAL_MANIFESTS/all.txt"
-          else
-            for attempt in {1..12}; do
-              if rcabench-leaderboard download --config "$BENCHMARK_CONFIG" --output "$DATASET_DIR"; then
-                break
-              fi
-              if [[ "$attempt" -eq 12 ]]; then
-                echo "Dataset download failed after $attempt resumable attempts" >&2
-                exit 1
-              fi
-              delay=$((attempt * 15))
-              echo "Dataset download attempt $attempt failed; resuming in ${delay}s" >&2
-              sleep "$delay"
-            done
-          fi
-      - name: Prepare dataset adapter
-        run: >-
-          rcabench-leaderboard normalize --adapter '${{ matrix.adapter }}'
-          --config "$BENCHMARK_CONFIG" --snapshot "$DATASET_DIR"
-      - name: Pull algorithm image
-        run: |
-          IMAGE=$(python -c 'import os; from rcabench_leaderboard.config import load_config; print(load_config(os.environ["BENCHMARK_CONFIG"])["algorithms"]["${{ matrix.algorithm }}"]["image"])')
-          for attempt in {1..12}; do
-            docker pull "$IMAGE" && break
-            [[ "$attempt" -lt 12 ]] || exit 1
-            sleep $((attempt * 15))
+          set -Eeuo pipefail
+          IMAGE=ghcr.io/hamsterstation/rcabench-microrca:ceac113d-r1
+          REPO="$GITHUB_WORKSPACE"
+          FSE=/mnt/jfs-fixed/rcabench-ci/datasets/fse-v1.0.0/ts4-ts-ui-dashboard-request-delay-9gnvk2
+          OPS=/mnt/jfs-fixed/rcabench-ci/datasets/ops-lite-9ac09981c08ab02a0b923eab7830d778934851a8
+          SMOKE=/home/nn/rcabench-smoke/microrca-ceac113d-r1
+          mkdir -p "$SMOKE"
+          docker pull "$IMAGE"
+
+          run_case() {
+            local label=$1 case_dir=$2
+            local output="$SMOKE/$label"
+            mkdir -p "$output"
+            timeout 650 docker run --rm --network none --cpus 2 \
+              --entrypoint .venv/bin/python --workdir /app \
+              --env PYTHONPATH=/app --env OMP_NUM_THREADS=2 \
+              --env MKL_NUM_THREADS=2 --env OPENBLAS_NUM_THREADS=2 \
+              --volume "$case_dir/converted:/input:ro" \
+              --volume "$output:/output" \
+              --volume "$REPO/containers/run_algorithm.py:/benchmark_runner.py:ro" \
+              "$IMAGE" /benchmark_runner.py microrca \
+              --input /input --output /output --datapack "$label" \
+              >"$output/run.log" 2>&1
+          }
+
+          run_case fse "$FSE" &
+          p1=$!
+          run_case ops-hotel "$OPS/batch-01KQHDBB5Y8K69Z13G7VSWG9FS" &
+          p2=$!
+          run_case ops-train "$OPS/batch-01KQJ23RSSQ3W1ESP1DJDHDFE2" &
+          p3=$!
+          wait "$p1" "$p2" "$p3"
+
+          for label in fse ops-hotel ops-train; do
+            jq -e '
+              .status == "ok" and
+              (.error == null) and
+              (.answers | length > 0) and
+              ([.answers[].level] | all(. == "service"))
+            ' "$SMOKE/$label/result.json"
           done
-      - name: Prepare trained assets
-        if: matrix.prepare
-        id: prepare
-        run: |
-          ASSETS=$(rcabench-leaderboard prepare '${{ matrix.algorithm }}' \
-            --config "$BENCHMARK_CONFIG" --snapshot "$DATASET_DIR" \
-            --cache-root "$RCABENCH_STORAGE/cache")
-          echo "assets=$ASSETS" >> "$GITHUB_OUTPUT"
-      - name: Evaluate algorithm
-        run: |
-          ASSET_ARGS=()
-          if [[ -n '${{ steps.prepare.outputs.assets }}' ]]; then
-            ASSET_ARGS=(--assets '${{ steps.prepare.outputs.assets }}')
-          fi
-          RUN_ROOT="$RCABENCH_STORAGE/runs/${{ github.run_id }}/${{ matrix.benchmark }}/${{ matrix.algorithm }}"
-          mkdir -p "$RUN_ROOT"
-          rcabench-leaderboard run '${{ matrix.algorithm }}' \
-            --config "$BENCHMARK_CONFIG" --snapshot "$DATASET_DIR" \
-            --output "$RUN_ROOT/cases" "${ASSET_ARGS[@]}"
-          rcabench-leaderboard evaluate '${{ matrix.algorithm }}' \
-            --config "$BENCHMARK_CONFIG" --snapshot "$DATASET_DIR" \
-            --results "$RUN_ROOT/cases" --output "$RUN_ROOT/metrics.json" \
-            --require-complete
-          cp "$RUN_ROOT/metrics.json" metrics.json
+
+          docker run --rm --entrypoint sh "$IMAGE" -lc \
+            "grep -RInE 'injection|ground_truth' /app/src/shapleyiq/platform/algorithms.py || true" \
+            >"$SMOKE/ground-truth-audit.txt"
+          test ! -s "$SMOKE/ground-truth-audit.txt"
       - uses: actions/upload-artifact@v4
         with:
-          name: metrics-${{ matrix.benchmark }}-${{ matrix.algorithm }}
-          path: metrics.json
+          name: microrca-cross-system-smoke
+          path: /home/nn/rcabench-smoke/microrca-ceac113d-r1
           if-no-files-found: error
-
-  collect:
-    needs: [plan, evaluate]
-    if: always() && needs.plan.result == 'success'
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          ref: main
-      - uses: actions/setup-python@v5
-        with:
-          python-version: "3.12"
-      - run: python -m pip install -e .
-      - uses: actions/download-artifact@v4
-        with:
-          pattern: metrics-*
-          path: collected
-      - name: Promote results
-        env:
-          MATRIX: ${{ needs.plan.outputs.matrix }}
-        run: |
-          RUN_ID='github-${{ github.run_id }}-${{ github.run_attempt }}'
-          while IFS= read -r row; do
-            benchmark=$(jq -r .benchmark <<< "$row")
-            algorithm=$(jq -r .algorithm <<< "$row")
-            config=$(jq -r .config <<< "$row")
-            metrics="collected/metrics-$benchmark-$algorithm/metrics.json"
-            [[ -f "$metrics" ]] || continue
-            rcabench-leaderboard record "$algorithm" --config "$config" \
-              --metrics "$metrics" --run-id "$RUN_ID" \
-              --archive "results/history/$RUN_ID/$benchmark/$algorithm.json"
-          done < <(jq -c '.[]' <<< "$MATRIX")
-          rcabench-leaderboard build-site
-      - name: Commit leaderboard update
-        run: |
-          git config user.name github-actions[bot]
-          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
-          git add results/leaderboard.json results/history
-          git commit -m 'results: publish benchmark ${{ github.run_id }}' || exit 0
-          git pull --rebase origin main
-          git push origin HEAD:main
