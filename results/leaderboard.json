@@ -1,6 +1,6 @@
 {
   "schema_version": 2,
-  "generated_at": "2026-07-30T06:41:35.086495Z",
+  "generated_at": "2026-07-30T09:33:16.390459Z",
   "benchmarks": [
     {
       "benchmark": {
@@ -41,6 +41,37 @@
             "top@1": 0.5147679324894515,
             "top@3": 0.7489451476793249,
             "top@5": 0.7848101265822784
+          }
+        },
+        {
+          "algorithm": "microrca",
+          "display_name": "MicroRCA",
+          "algorithm_commit": "ceac113d2d1a3a571013ca58358e8b9f9e61933f",
+          "scope": "all",
+          "cases": 1422,
+          "run_id": "pr-14-09063bdfa78afd58f93ab05e47628318d629debc",
+          "metrics": {
+            "algorithm_error_case_names": [],
+            "algorithm_error_cases": 0,
+            "average_algorithm_seconds": 9.631114448173136,
+            "avg@3": 0.5663384903891234,
+            "avg@5": 0.619268635724332,
+            "deduplicate_services": true,
+            "duplicate_ranking_cases": 0,
+            "empty_ranking_case_names": [],
+            "empty_ranking_cases": 0,
+            "invalid_case_names": [],
+            "invalid_cases": 0,
+            "missing_case_names": [],
+            "missing_cases": 0,
+            "mrr": 0.6087705211650357,
+            "non_empty_ranking_cases": 1422,
+            "requested_cases": 1422,
+            "schema_version": 1,
+            "successful_result_files": 1422,
+            "top@1": 0.5260196905766527,
+            "top@3": 0.6012658227848101,
+            "top@5": 0.709563994374121
           }
         },
         {
@@ -299,6 +330,42 @@
             "top@1": 0.228,
             "top@3": 0.356,
             "top@5": 0.422
+          }
+        },
+        {
+          "algorithm": "microrca",
+          "display_name": "MicroRCA",
+          "algorithm_commit": "ceac113d2d1a3a571013ca58358e8b9f9e61933f",
+          "scope": "all",
+          "cases": 500,
+          "run_id": "pr-14-09063bdfa78afd58f93ab05e47628318d629debc",
+          "metrics": {
+            "algorithm_error_case_names": [],
+            "algorithm_error_cases": 0,
+            "average_algorithm_seconds": 6.516718178540469,
+            "avg@3": 0.20266666666666666,
+            "avg@5": 0.29,
+            "deduplicate_services": true,
+            "duplicate_ranking_cases": 0,
+            "empty_ranking_case_names": [
+              "batch-01KQKB9Q24RRTREX5MK5PB2FYQ",
+              "batch-01KQKGEV7QNKJPZ64W0GV1FXGE",
+              "otel-demo11-cart-container-kill-g95z77",
+              "otel-demo9-payment-pod-kill-mk8jld"
+            ],
+            "empty_ranking_cases": 4,
+            "invalid_case_names": [],
+            "invalid_cases": 0,
+            "missing_case_names": [],
+            "missing_cases": 0,
+            "mrr": 0.2649853654060454,
+            "non_empty_ranking_cases": 496,
+            "requested_cases": 500,
+            "schema_version": 1,
+            "successful_result_files": 500,
+            "top@1": 0.094,
+            "top@3": 0.302,
+            "top@5": 0.464
           }
         },
         {
