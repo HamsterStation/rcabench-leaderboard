@@ -16,7 +16,13 @@ jobs:
       - uses: actions/checkout@v4
       - id: read
         run: |
-          IMAGES=$(PYTHONPATH=src python -m rcabench_leaderboard.matrix images)
+          IMAGES=$(jq -c '[.images.nezha as $image | {
+            name: "nezha",
+            source: $image.source,
+            commit: $image.commit,
+            tag: $image.commit[0:8],
+            image: $image.image
+          }]' config/algorithms.json)
           echo "images=$IMAGES" >> "$GITHUB_OUTPUT"
 
   build:
