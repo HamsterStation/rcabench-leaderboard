@@ -35,6 +35,8 @@ def test_repository_config_is_valid():
     assert config["algorithms"]["microhecl"]["image"].endswith("microhecl:ceac113d-r1")
     assert config["algorithms"]["microrank"]["image"] != config["algorithms"]["shapleyiq"]["image"]
     assert config["algorithms"]["microrank"]["image"].endswith("microrank:ceac113d-r1")
+    assert config["algorithms"]["microrca"]["image"] != config["algorithms"]["shapleyiq"]["image"]
+    assert config["algorithms"]["microrca"]["image"].endswith("microrca:ceac113d-r1")
 
 
 def test_ops_lite_config_is_valid():
