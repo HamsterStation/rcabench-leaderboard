@@ -21,11 +21,11 @@ jobs:
         shell: bash
         run: |
           set -Eeuo pipefail
-          IMAGE=ghcr.io/hamsterstation/rcabench-diagfusion:c5eb501b-r1
+          IMAGE=ghcr.io/hamsterstation/rcabench-diagfusion:d1694acb-r1
           REPO="$GITHUB_WORKSPACE"
           FSE=/mnt/jfs-fixed/rcabench-ci/datasets/fse-v1.0.0/ts4-ts-ui-dashboard-request-delay-9gnvk2
           OPS=/mnt/jfs-fixed/rcabench-ci/datasets/ops-lite-9ac09981c08ab02a0b923eab7830d778934851a8
-          SMOKE=/home/nn/rcabench-smoke/diagfusion-c5eb501b-r1
+          SMOKE=/home/nn/rcabench-smoke/diagfusion-d1694acb-r1
           mkdir -p "$SMOKE"
           docker pull "$IMAGE"
 
@@ -52,8 +52,9 @@ jobs:
           run_case fse "$FSE"
           run_case ops-hotel "$OPS/batch-01KQHDBB5Y8K69Z13G7VSWG9FS"
           run_case ops-train "$OPS/batch-01KQJ23RSSQ3W1ESP1DJDHDFE2"
+          run_case ops-empty-logs "$OPS/hs1-frontend-delay-qhklld"
 
-          for label in fse ops-hotel ops-train; do
+          for label in fse ops-hotel ops-train ops-empty-logs; do
             jq -e '
               .status == "ok" and
               (.error == null) and
@@ -86,5 +87,5 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           name: diagfusion-cross-system-smoke
-          path: /home/nn/rcabench-smoke/diagfusion-c5eb501b-r1
+          path: /home/nn/rcabench-smoke/diagfusion-d1694acb-r1
           if-no-files-found: error
