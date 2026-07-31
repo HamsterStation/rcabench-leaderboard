@@ -23,8 +23,8 @@
     },
     "diagfusion": {
       "source": "https://github.com/LGU-SE-Internal/DiagFusion.git",
-      "commit": "d1694acbfa8f6f7ef665c11804aeb55176e4b263",
-      "image": "ghcr.io/hamsterstation/rcabench-diagfusion:d1694acb-r1",
+      "commit": "04e9171657a316d64b3427dce5808b703a34cd4e",
+      "image": "ghcr.io/hamsterstation/rcabench-diagfusion:04e91716-r1",
       "tag_suffix": "-r1",
       "watch": false
     },
