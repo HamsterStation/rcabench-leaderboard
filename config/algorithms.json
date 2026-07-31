@@ -4,7 +4,9 @@
     "baro": {
       "source": "https://github.com/LGU-SE-Internal/baro.git",
       "commit": "0a18961e30ca058a249276f9f4e961ca435eaf22",
-      "image": "ghcr.io/hamsterstation/rcabench-baro:0a18961e"
+      "image": "ghcr.io/hamsterstation/rcabench-baro:0a18961e-r1",
+      "tag_suffix": "-r1",
+      "watch": false
     },
     "art": {
       "source": "https://github.com/LGU-SE-Internal/ART.git",
