@@ -17,8 +17,10 @@
     },
     "eadro": {
       "source": "https://github.com/LGU-SE-Internal/Eadro.git",
-      "commit": "4ee55dfc3b23000dc3dcfda725bd63737b97a457",
-      "image": "ghcr.io/hamsterstation/rcabench-eadro:4ee55dfc"
+      "commit": "0e6f4254900df7215a4a21b9fcc4b721f357a3ab",
+      "image": "ghcr.io/hamsterstation/rcabench-eadro:0e6f4254-r1",
+      "tag_suffix": "-r1",
+      "watch": false
     },
     "causalrca": {
       "source": "https://github.com/LGU-SE-Internal/CausalRCA.git",
