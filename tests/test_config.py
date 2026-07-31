@@ -39,6 +39,7 @@ def test_repository_config_is_valid():
     assert config["algorithms"]["microrca"]["image"].endswith("microrca:ceac113d-r1")
     assert config["algorithms"]["nezha"]["image"].endswith("nezha:89907e09-r1")
     assert config["algorithms"]["shapleyiq"]["image"].endswith("shapleyiq:ceac113d-r1")
+    assert config["algorithms"]["diagfusion"]["image"].endswith("diagfusion:04e91716-r1")
 
 
 def test_ops_lite_config_is_valid():

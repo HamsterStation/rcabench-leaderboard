@@ -23,8 +23,9 @@
     },
     "diagfusion": {
       "source": "https://github.com/LGU-SE-Internal/DiagFusion.git",
-      "commit": "38e1649188afa673c00d4b8534b3ff2dc0000d41",
-      "image": "ghcr.io/hamsterstation/rcabench-diagfusion:38e16491",
+      "commit": "04e9171657a316d64b3427dce5808b703a34cd4e",
+      "image": "ghcr.io/hamsterstation/rcabench-diagfusion:04e91716-r1",
+      "tag_suffix": "-r1",
       "watch": false
     },
     "microdig": {
