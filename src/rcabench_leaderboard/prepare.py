@@ -36,14 +36,20 @@ def _dataset_links(
 
 
 def _docker_base(image: str, data_root: Path) -> list[str]:
-    return [
+    command = [
         "docker",
         "run",
         "--rm",
         "--volume",
         f"{data_root.resolve()}:/benchmark-data:ro",
-        image,
     ]
+    symlink_parents = sorted(
+        {entry.resolve().parent for entry in data_root.iterdir() if entry.is_symlink()}
+    )
+    for parent in symlink_parents:
+        command.extend(["--volume", f"{parent}:{parent}:ro"])
+    command.append(image)
+    return command
 
 
 def prepare_art(
