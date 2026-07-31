@@ -1,0 +1,39 @@
+{
+  "algorithm": "art",
+  "display_name": "ART",
+  "algorithm_commit": "e67094a34b855f789eb5b0cc6f0e20075a8cf57d",
+  "scope": "test",
+  "cases": 100,
+  "run_id": "pr-19-c4c507703f482c238fa3a61de3a240169f75af0e",
+  "metrics": {
+    "algorithm_error_case_names": [
+      "batch-01KQKNGPXS62WE3RN9YYRV9QZJ",
+      "batch-01KQNXA8WB0Z6HV1ZHGZ37XYRB",
+      "hs8-search-pod-failure-m5spk2"
+    ],
+    "algorithm_error_cases": 3,
+    "average_algorithm_seconds": 3.534366361927241,
+    "avg@3": 0.06666666666666667,
+    "avg@5": 0.10200000000000001,
+    "deduplicate_services": true,
+    "duplicate_ranking_cases": 0,
+    "empty_ranking_case_names": [
+      "batch-01KQKNGPXS62WE3RN9YYRV9QZJ",
+      "batch-01KQNXA8WB0Z6HV1ZHGZ37XYRB",
+      "hs8-search-pod-failure-m5spk2"
+    ],
+    "empty_ranking_cases": 3,
+    "invalid_case_names": [],
+    "invalid_cases": 0,
+    "missing_case_names": [],
+    "missing_cases": 0,
+    "mrr": 0.08350000000000002,
+    "non_empty_ranking_cases": 97,
+    "requested_cases": 100,
+    "schema_version": 1,
+    "successful_result_files": 100,
+    "top@1": 0.05,
+    "top@3": 0.09,
+    "top@5": 0.17
+  }
+}

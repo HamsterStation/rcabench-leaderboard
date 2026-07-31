@@ -10,8 +10,10 @@
     },
     "art": {
       "source": "https://github.com/LGU-SE-Internal/ART.git",
-      "commit": "ba8dfd3f0054cf90af3135dcdfa0f7a339ab254d",
-      "image": "ghcr.io/hamsterstation/rcabench-art:ba8dfd3f"
+      "commit": "e67094a34b855f789eb5b0cc6f0e20075a8cf57d",
+      "image": "ghcr.io/hamsterstation/rcabench-art:e67094a3-r1",
+      "tag_suffix": "-r1",
+      "watch": false
     },
     "eadro": {
       "source": "https://github.com/LGU-SE-Internal/Eadro.git",

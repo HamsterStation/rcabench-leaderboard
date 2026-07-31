@@ -1,0 +1,37 @@
+{
+  "algorithm": "art",
+  "display_name": "ART",
+  "algorithm_commit": "e67094a34b855f789eb5b0cc6f0e20075a8cf57d",
+  "scope": "test",
+  "cases": 296,
+  "run_id": "pr-19-c4c507703f482c238fa3a61de3a240169f75af0e",
+  "metrics": {
+    "algorithm_error_case_names": [
+      "ts5-ts-basic-service-response-replace-code-gcjzzr",
+      "ts5-ts-food-service-request-replace-method-tmprwh"
+    ],
+    "algorithm_error_cases": 2,
+    "average_algorithm_seconds": 5.2498522463972,
+    "avg@3": 0.0427927927927928,
+    "avg@5": 0.060810810810810814,
+    "deduplicate_services": true,
+    "duplicate_ranking_cases": 0,
+    "empty_ranking_case_names": [
+      "ts5-ts-basic-service-response-replace-code-gcjzzr",
+      "ts5-ts-food-service-request-replace-method-tmprwh"
+    ],
+    "empty_ranking_cases": 2,
+    "invalid_case_names": [],
+    "invalid_cases": 0,
+    "missing_case_names": [],
+    "missing_cases": 0,
+    "mrr": 0.04740990990990991,
+    "non_empty_ranking_cases": 294,
+    "requested_cases": 296,
+    "schema_version": 1,
+    "successful_result_files": 296,
+    "top@1": 0.02364864864864865,
+    "top@3": 0.06418918918918919,
+    "top@5": 0.09797297297297297
+  }
+}

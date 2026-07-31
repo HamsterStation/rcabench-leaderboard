@@ -28,6 +28,7 @@ concurrency:
 env:
   RCABENCH_STORAGE: ${{ vars.RCABENCH_STORAGE || '/mnt/jfs-fixed/rcabench-ci' }}
   RCABENCH_RUN_STORAGE: ${{ vars.RCABENCH_RUN_STORAGE || vars.RCABENCH_STORAGE || '/mnt/jfs-fixed/rcabench-ci' }}
+  RCABENCH_CACHE_STORAGE: ${{ vars.RCABENCH_CACHE_STORAGE || vars.RCABENCH_RUN_STORAGE || '/var/tmp/rcabench-ci' }}
   RCABENCH_REUSE_PREPARED_DATASETS: ${{ vars.RCABENCH_REUSE_PREPARED_DATASETS || 'false' }}
 
 jobs:
@@ -235,7 +236,7 @@ jobs:
         run: |
           ASSETS=$(rcabench-leaderboard prepare '${{ matrix.algorithm }}' \
             --config "$BENCHMARK_CONFIG" --snapshot "$DATASET_DIR" \
-            --cache-root "$RCABENCH_STORAGE/cache")
+            --cache-root "$RCABENCH_CACHE_STORAGE/cache")
           echo "assets=$ASSETS" >> "$GITHUB_OUTPUT"
       - name: Run and score
         run: |

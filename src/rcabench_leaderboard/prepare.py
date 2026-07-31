@@ -36,14 +36,20 @@ def _dataset_links(
 
 
 def _docker_base(image: str, data_root: Path) -> list[str]:
-    return [
+    command = [
         "docker",
         "run",
         "--rm",
         "--volume",
         f"{data_root.resolve()}:/benchmark-data:ro",
-        image,
     ]
+    symlink_parents = sorted(
+        {entry.resolve().parent for entry in data_root.iterdir() if entry.is_symlink()}
+    )
+    for parent in symlink_parents:
+        command.extend(["--volume", f"{parent}:{parent}:ro"])
+    command.append(image)
+    return command
 
 
 def prepare_art(
@@ -77,22 +83,25 @@ def prepare_art(
 
     samples = art_data / "RCABENCH" / "samples"
     if not (state / ".preprocess-complete").exists():
-        command = _docker_base(algorithm["image"], data_root)
-        command[3:3] = [
-            "--entrypoint",
-            "/.venv/bin/python",
-            "--env",
-            "PYTHONPATH=/",
-            "--volume",
-            f"{links.resolve()}:/dataset:ro",
-            "--volume",
-            f"{art_data.resolve()}:/art-data",
-            "--volume",
-            str((repository_root / "containers/run_art_preprocess.py").resolve())
-            + ":/run-preprocess.py:ro",
-        ]
-        command.append("/run-preprocess.py")
-        _run(command, logs / "preprocess.log", allow_failure=True)
+        if not (samples / "train_samples.pkl").is_file() or not (
+            samples / "test_samples.pkl"
+        ).is_file():
+            command = _docker_base(algorithm["image"], data_root)
+            command[3:3] = [
+                "--entrypoint",
+                "/.venv/bin/python",
+                "--env",
+                "PYTHONPATH=/",
+                "--volume",
+                f"{links.resolve()}:/dataset:ro",
+                "--volume",
+                f"{art_data.resolve()}:/art-data",
+                "--volume",
+                str((repository_root / "containers/run_art_preprocess.py").resolve())
+                + ":/run-preprocess.py:ro",
+            ]
+            command.append("/run-preprocess.py")
+            _run(command, logs / "preprocess.log", allow_failure=True)
         if not (samples / "train_samples.pkl").is_file() or not (
             samples / "test_samples.pkl"
         ).is_file():
