@@ -61,7 +61,8 @@
     "shapleyiq": {
       "source": "https://github.com/LGU-SE-Internal/ShapleyIQ.git",
       "commit": "ceac113d2d1a3a571013ca58358e8b9f9e61933f",
-      "image": "ghcr.io/hamsterstation/rcabench-shapleyiq:ceac113d"
+      "image": "ghcr.io/hamsterstation/rcabench-shapleyiq:ceac113d-r1",
+      "tag_suffix": "-r1"
     },
     "simplerca": {
       "source": "https://github.com/LGU-SE-Internal/Simple-RCA.git",
