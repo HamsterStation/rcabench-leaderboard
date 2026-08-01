@@ -247,6 +247,15 @@ def validate_config(config: dict[str, Any]) -> None:
                 raise ConfigError(f"algorithms.{name}.{key} is required")
         if algorithm["scope"] not in dataset["manifests"]:
             raise ConfigError(f"algorithms.{name}.scope is not a configured manifest")
+        preparation_commit = algorithm.get("preparation_commit")
+        if preparation_commit is not None and (
+            not isinstance(preparation_commit, str)
+            or not SHA_PATTERN.fullmatch(preparation_commit)
+        ):
+            raise ConfigError(
+                f"algorithms.{name}.preparation_commit must be an immutable "
+                "40-character commit SHA"
+            )
         workers = int(algorithm.get("workers", 0))
         if not 1 <= workers <= 64:
             raise ConfigError(f"algorithms.{name}.workers must be between 1 and 64")
