@@ -209,7 +209,7 @@ def prepare_eadro(
     repository_root: Path,
     cache_key: str,
 ) -> Path:
-    revision = algorithm["commit"][:12]
+    revision = algorithm.get("preparation_commit", algorithm["commit"])[:12]
     train_name = f"__leaderboard_train_{revision}"
     test_name = f"__leaderboard_test_{revision}"
     state = cache_root / "training" / "eadro" / cache_key
@@ -338,9 +338,11 @@ def prepare_assets(
     function = prepare_art if algorithm_name == "art" else prepare_eadro
     dataset_revision = config["dataset"]["revision"]
     safe_revision = re.sub(r"[^A-Za-z0-9_.-]+", "-", dataset_revision)
-    cache_key = f"{safe_revision}-{config['algorithms'][algorithm_name]['commit'][:12]}"
+    algorithm = config["algorithms"][algorithm_name]
+    preparation_commit = algorithm.get("preparation_commit", algorithm["commit"])
+    cache_key = f"{safe_revision}-{preparation_commit[:12]}"
     return function(
-        algorithm=config["algorithms"][algorithm_name],
+        algorithm=algorithm,
         data_root=Path(data_root),
         train_cases=train_cases,
         test_cases=test_cases,

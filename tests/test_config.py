@@ -42,6 +42,10 @@ def test_repository_config_is_valid():
     assert config["algorithms"]["diagfusion"]["image"].endswith("diagfusion:04e91716-r1")
     assert config["algorithms"]["baro"]["image"].endswith("baro:0a18961e-r1")
     assert config["algorithms"]["art"]["image"].endswith("art:e67094a3-r1")
+    assert config["algorithms"]["eadro"]["image"].endswith("eadro:d8df6d29-r1")
+    assert config["algorithms"]["eadro"]["preparation_commit"] == (
+        "0e6f4254900df7215a4a21b9fcc4b721f357a3ab"
+    )
 
 
 def test_ops_lite_config_is_valid():
