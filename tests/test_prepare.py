@@ -63,3 +63,40 @@ def test_eadro_retry_preserves_partial_checkpoint_directory(tmp_path: Path):
         == "leaderboard_commit_r2"
     )
     assert (partial / "latest_model.ckpt").read_bytes() == b"partial"
+
+
+def test_eadro_packaging_commit_reuses_behavioral_preparation_cache(
+    tmp_path: Path, monkeypatch
+):
+    assets = tmp_path / "cache/assets/eadro/dataset-revision-bbbbbbbbbbbb"
+    assets.mkdir(parents=True)
+    (assets / "best_model.ckpt").write_bytes(b"trained checkpoint")
+    (assets / "metadata.pkl").write_bytes(b"trained metadata")
+    config = {
+        "dataset": {"revision": "dataset-revision"},
+        "algorithms": {
+            "eadro": {
+                "commit": "a" * 40,
+                "preparation_commit": "b" * 40,
+                "image": "example/image:packaging",
+            }
+        },
+    }
+
+    monkeypatch.setattr(
+        prepare,
+        "prepare_eadro",
+        lambda **kwargs: kwargs["cache_root"] / "assets/eadro" / kwargs["cache_key"],
+    )
+
+    result = prepare.prepare_assets(
+        config=config,
+        algorithm_name="eadro",
+        data_root=tmp_path / "dataset",
+        train_cases=[],
+        test_cases=[],
+        cache_root=tmp_path / "cache",
+        repository_root=tmp_path,
+    )
+
+    assert result == assets

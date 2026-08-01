@@ -17,8 +17,9 @@
     },
     "eadro": {
       "source": "https://github.com/LGU-SE-Internal/Eadro.git",
-      "commit": "0e6f4254900df7215a4a21b9fcc4b721f357a3ab",
-      "image": "ghcr.io/hamsterstation/rcabench-eadro:0e6f4254-r1",
+      "commit": "d8df6d29de3eb3ae4c3cbefeafd62813eb78af13",
+      "image": "ghcr.io/hamsterstation/rcabench-eadro:d8df6d29-r1",
+      "preparation_commit": "0e6f4254900df7215a4a21b9fcc4b721f357a3ab",
       "tag_suffix": "-r1",
       "watch": false
     },
