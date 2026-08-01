@@ -26,7 +26,9 @@
     "causalrca": {
       "source": "https://github.com/LGU-SE-Internal/CausalRCA.git",
       "commit": "3f4ceee8c821c7332dc20ac5ba70175b3930bf21",
-      "image": "ghcr.io/hamsterstation/rcabench-causalrca:3f4ceee8"
+      "image": "ghcr.io/hamsterstation/rcabench-causalrca:3f4ceee8-r1",
+      "tag_suffix": "-r1",
+      "watch": false
     },
     "diagfusion": {
       "source": "https://github.com/LGU-SE-Internal/DiagFusion.git",

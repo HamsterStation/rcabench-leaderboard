@@ -46,6 +46,9 @@ def test_repository_config_is_valid():
     assert config["algorithms"]["eadro"]["preparation_commit"] == (
         "0e6f4254900df7215a4a21b9fcc4b721f357a3ab"
     )
+    assert config["algorithms"]["causalrca"]["image"].endswith(
+        "causalrca:3f4ceee8-r1"
+    )
 
 
 def test_ops_lite_config_is_valid():
