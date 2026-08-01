@@ -1,0 +1,34 @@
+name: Diagnose Eadro preparation
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  diagnose:
+    runs-on: [self-hosted, linux, x64, rcabench]
+    steps:
+      - name: Inspect preserved Eadro preparation state
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          ROOT=/var/tmp/rcabench-ci/cache/training/eadro
+          ASSETS=/var/tmp/rcabench-ci/cache/assets/eadro
+          for key in \
+            v1.0.0-0e6f4254900d \
+            9ac09981c08ab02a0b923eab7830d778934851a8-0e6f4254900d; do
+            state="$ROOT/$key"
+            echo "STATE $key"
+            find "$state" -maxdepth 4 -type f -printf '%TY-%Tm-%TdT%TH:%TM:%TS %s %p\n' \
+              2>/dev/null | sort | tail -n 80
+            for log in "$state"/logs/*.log; do
+              [[ -f "$log" ]] || continue
+              echo "LOG $log"
+              tail -n 120 "$log"
+            done
+          done
+          echo "ASSETS"
+          find "$ASSETS" -maxdepth 3 -type f -printf '%TY-%Tm-%TdT%TH:%TM:%TS %s %p\n' \
+            2>/dev/null | sort
