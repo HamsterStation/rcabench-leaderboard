@@ -189,6 +189,16 @@ def prepare_art(
     return assets
 
 
+def _next_eadro_experiment_name(storage: Path, base_name: str) -> str:
+    checkpoint_root = storage / "checkpoints"
+    if not (checkpoint_root / base_name).exists():
+        return base_name
+    attempt = 2
+    while (checkpoint_root / f"{base_name}_r{attempt}").exists():
+        attempt += 1
+    return f"{base_name}_r{attempt}"
+
+
 def prepare_eadro(
     *,
     algorithm: dict[str, Any],
@@ -263,8 +273,11 @@ def prepare_eadro(
             source.replace(target)
         (state / ".preprocess-complete").touch()
 
-    checkpoints = list((storage / "checkpoints").rglob("best_model.ckpt"))
-    if not checkpoints:
+    training_complete = state / ".training-complete"
+    if not training_complete.exists():
+        experiment_name = _next_eadro_experiment_name(
+            storage, f"leaderboard_{revision}"
+        )
         command = _docker_base(algorithm["image"], data_root)
         command[3:3] = [
             "--entrypoint",
@@ -289,12 +302,18 @@ def prepare_eadro(
                 "--test-dataset-folder",
                 test_name,
                 "--experiment-name",
-                f"leaderboard_{revision}",
+                experiment_name,
             ]
         )
         _run(command, logs / "train.log")
-        checkpoints = list((storage / "checkpoints").rglob("best_model.ckpt"))
+        completed_checkpoint = (
+            storage / "checkpoints" / experiment_name / "best_model.ckpt"
+        )
+        if not completed_checkpoint.is_file():
+            raise RuntimeError(f"Eadro produced no checkpoint; see {logs / 'train.log'}")
+        training_complete.write_text(f"{experiment_name}\n")
 
+    checkpoints = list((storage / "checkpoints").rglob("best_model.ckpt"))
     metadata = storage / "metadata" / "rcabench_metadata.pkl"
     if not checkpoints or not metadata.is_file():
         raise RuntimeError(f"Eadro training assets are incomplete; see {logs}")

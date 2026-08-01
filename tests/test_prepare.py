@@ -3,7 +3,7 @@ from pathlib import Path
 import pytest
 
 from rcabench_leaderboard import prepare
-from rcabench_leaderboard.prepare import _docker_base
+from rcabench_leaderboard.prepare import _docker_base, _next_eadro_experiment_name
 
 
 def test_docker_base_mounts_absolute_symlink_targets_read_only(tmp_path: Path):
@@ -50,3 +50,16 @@ def test_art_preparation_resumes_at_finalize_when_samples_exist(tmp_path: Path, 
 
     assert len(commands) == 1
     assert commands[0][-1] == "/finalize.py"
+
+
+def test_eadro_retry_preserves_partial_checkpoint_directory(tmp_path: Path):
+    storage = tmp_path / "storage"
+    partial = storage / "checkpoints/leaderboard_commit"
+    partial.mkdir(parents=True)
+    (partial / "latest_model.ckpt").write_bytes(b"partial")
+
+    assert (
+        _next_eadro_experiment_name(storage, "leaderboard_commit")
+        == "leaderboard_commit_r2"
+    )
+    assert (partial / "latest_model.ckpt").read_bytes() == b"partial"
