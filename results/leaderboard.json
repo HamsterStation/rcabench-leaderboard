@@ -1,6 +1,6 @@
 {
   "schema_version": 2,
-  "generated_at": "2026-07-31T19:55:32.331412Z",
+  "generated_at": "2026-08-01T08:07:27.768978Z",
   "benchmarks": [
     {
       "benchmark": {
@@ -407,18 +407,32 @@
         {
           "algorithm": "eadro",
           "display_name": "Eadro",
-          "algorithm_commit": "4ee55dfc3b23000dc3dcfda725bd63737b97a457",
+          "algorithm_commit": "6d380484f0ac07bf05765cf1819f0ddb308a905f",
           "scope": "test",
           "cases": 296,
-          "run_id": "initial-reproduction",
+          "run_id": "pr-20-d580e6f833b95aebb5c1b3d57d6d2d16266170e7",
           "metrics": {
-            "top@1": 0.1284,
-            "top@3": 0.3209,
-            "top@5": 0.4459,
-            "avg@3": 0.2173,
-            "avg@5": 0.2892,
-            "mrr": 0.2313,
-            "average_algorithm_seconds": 3.6
+            "algorithm_error_case_names": [],
+            "algorithm_error_cases": 0,
+            "average_algorithm_seconds": 3.496367785450373,
+            "avg@3": 0.1801801801801802,
+            "avg@5": 0.2533783783783784,
+            "deduplicate_services": true,
+            "duplicate_ranking_cases": 0,
+            "empty_ranking_case_names": [],
+            "empty_ranking_cases": 0,
+            "invalid_case_names": [],
+            "invalid_cases": 0,
+            "missing_case_names": [],
+            "missing_cases": 0,
+            "mrr": 0.1978603603603605,
+            "non_empty_ranking_cases": 296,
+            "requested_cases": 296,
+            "schema_version": 1,
+            "successful_result_files": 296,
+            "top@1": 0.09797297297297297,
+            "top@3": 0.2702702702702703,
+            "top@5": 0.40878378378378377
           }
         },
         {
@@ -927,29 +941,32 @@
         {
           "algorithm": "eadro",
           "display_name": "Eadro",
-          "algorithm_commit": "4ee55dfc3b23000dc3dcfda725bd63737b97a457",
+          "algorithm_commit": "6d380484f0ac07bf05765cf1819f0ddb308a905f",
           "scope": "test",
           "cases": 100,
-          "run_id": "server-import-30254493514-2",
+          "run_id": "pr-20-d580e6f833b95aebb5c1b3d57d6d2d16266170e7",
           "metrics": {
             "algorithm_error_case_names": [],
             "algorithm_error_cases": 0,
-            "average_algorithm_seconds": 1.4955862600728869,
-            "avg@3": 0.11,
-            "avg@5": 0.166,
+            "average_algorithm_seconds": 1.344181233085692,
+            "avg@3": 0.10333333333333335,
+            "avg@5": 0.152,
             "deduplicate_services": true,
             "duplicate_ranking_cases": 0,
+            "empty_ranking_case_names": [],
+            "empty_ranking_cases": 0,
             "invalid_case_names": [],
             "invalid_cases": 0,
             "missing_case_names": [],
             "missing_cases": 0,
-            "mrr": 0.12300000000000001,
+            "mrr": 0.11566666666666664,
+            "non_empty_ranking_cases": 100,
             "requested_cases": 100,
             "schema_version": 1,
             "successful_result_files": 100,
             "top@1": 0.05,
             "top@3": 0.17,
-            "top@5": 0.27
+            "top@5": 0.26
           }
         },
         {
