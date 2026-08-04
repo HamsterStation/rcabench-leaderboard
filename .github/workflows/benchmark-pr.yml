@@ -127,6 +127,8 @@ jobs:
   evaluate:
     needs: [metadata, plan, build]
     if: always() && needs.plan.outputs.has_work == 'true' && (needs.build.result == 'success' || needs.build.result == 'skipped')
+    # ML evaluations are resumable but can legitimately exceed Actions' six-hour default.
+    timeout-minutes: 4320
     strategy:
       fail-fast: false
       max-parallel: 1
