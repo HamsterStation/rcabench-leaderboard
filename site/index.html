@@ -4,53 +4,73 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="description" content="A reproducible leaderboard for root-cause analysis algorithms on RCABench.">
-    <title>RCA Field Notes — Leaderboard</title>
+    <title>RCABench Leaderboard</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Fraunces:opsz,wght@9..144,600;9..144,800&family=Manrope:wght@400;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="styles.css">
   </head>
   <body>
-    <div class="grain" aria-hidden="true"></div>
-    <header class="masthead">
-      <a class="wordmark" href="#">RCA / FIELD NOTES</a>
-      <div class="status"><span></span> reproducible benchmark</div>
+    <header class="site-header">
+      <div class="header-inner">
+        <a class="brand" href="#leaderboard">RCABench</a>
+        <nav aria-label="Main navigation">
+          <a class="active" href="#leaderboard">Leaderboard</a>
+          <a href="#methodology">Methodology</a>
+          <a href="https://github.com/HamsterStation/rcabench-leaderboard">GitHub</a>
+        </nav>
+      </div>
     </header>
 
     <main>
-      <section class="hero">
-        <p class="eyebrow" id="benchmark-eyebrow">Reproducible multi-dataset evaluation</p>
-        <h1>Root causes,<br><em>ranked in the open.</em></h1>
-        <p class="lede">Every score is tied to a dataset revision, an algorithm commit, and an auditable run. No hand-copied tables.</p>
-        <div class="dataset-stamp">
-          <span>DATASET</span>
-          <strong id="case-count">—</strong>
-          <small>diagnostic cases</small>
+      <section class="page-intro" aria-labelledby="page-title">
+        <div>
+          <p class="kicker">Public benchmark</p>
+          <h1 id="page-title">RCABench Leaderboard</h1>
+          <p>Reproducible service-level root cause analysis results. Every score is linked to a fixed dataset revision, algorithm commit, and archived run.</p>
         </div>
+        <div class="updated" id="updated-at">Last updated —</div>
       </section>
 
-      <section class="board" aria-labelledby="leaderboard-title">
-        <div class="section-head">
+      <section id="leaderboard" class="leaderboard-panel" aria-labelledby="leaderboard-title">
+        <div class="panel-heading">
           <div>
-            <p class="index">01 / CURRENT TABLE</p>
-            <h2 id="leaderboard-title">Leaderboard</h2>
+            <h2 id="leaderboard-title">Algorithms</h2>
+            <p id="board-description">Loading benchmark results…</p>
           </div>
-          <div class="legend">Service-level scores · sorted by MRR</div>
+          <div class="benchmark-tabs" id="benchmark-tabs" aria-label="Choose benchmark" role="tablist"></div>
         </div>
-        <div class="benchmark-tabs" id="benchmark-tabs" aria-label="Choose benchmark"></div>
+
+        <div class="summary-grid" aria-label="Benchmark summary">
+          <div class="summary-card"><span>Evaluated algorithms</span><strong id="algorithm-count">—</strong></div>
+          <div class="summary-card"><span>Dataset cases</span><strong id="case-count">—</strong></div>
+          <div class="summary-card"><span>Dataset revision</span><strong class="mono" id="dataset-revision">—</strong></div>
+        </div>
+
+        <div class="toolbar">
+          <label class="search-field">
+            <span class="sr-only">Search algorithms</span>
+            <svg aria-hidden="true" viewBox="0 0 24 24"><path d="m21 21-4.35-4.35m2.35-5.65a8 8 0 1 1-16 0 8 8 0 0 1 16 0Z"/></svg>
+            <input id="algorithm-search" type="search" placeholder="Search algorithms" autocomplete="off">
+          </label>
+          <p id="result-count" aria-live="polite"></p>
+        </div>
+
         <div class="table-wrap">
           <table>
             <thead>
               <tr>
-                <th>Rank / Method</th>
-                <th>Scope</th>
-                <th>Top@1</th>
-                <th>Top@3</th>
-                <th>Top@5</th>
-                <th>Avg@3</th>
-                <th>Avg@5</th>
-                <th class="primary">MRR</th>
-                <th>Time</th>
+                <th class="rank-column" scope="col">#</th>
+                <th scope="col"><button class="sort-button" data-sort="display_name">Algorithm <span aria-hidden="true"></span></button></th>
+                <th scope="col">Scope</th>
+                <th scope="col"><button class="sort-button" data-sort="top@1">Top@1 <span aria-hidden="true"></span></button></th>
+                <th scope="col"><button class="sort-button" data-sort="top@3">Top@3 <span aria-hidden="true"></span></button></th>
+                <th scope="col"><button class="sort-button" data-sort="top@5">Top@5 <span aria-hidden="true"></span></button></th>
+                <th scope="col"><button class="sort-button" data-sort="avg@3">Avg@3 <span aria-hidden="true"></span></button></th>
+                <th scope="col"><button class="sort-button" data-sort="avg@5">Avg@5 <span aria-hidden="true"></span></button></th>
+                <th class="primary" scope="col"><button class="sort-button" data-sort="mrr">MRR <span aria-hidden="true"></span></button></th>
+                <th scope="col"><button class="sort-button" data-sort="average_algorithm_seconds">Avg. time <span aria-hidden="true"></span></button></th>
+                <th scope="col">Run</th>
               </tr>
             </thead>
             <tbody id="leaderboard-body"></tbody>
@@ -58,22 +78,19 @@
         </div>
       </section>
 
-      <section class="method">
-        <div>
-          <p class="index">02 / PROTOCOL</p>
-          <h2>Built to be rerun,<br>not merely read.</h2>
-        </div>
-        <div class="protocol-grid">
-          <article><b>01</b><h3>Version everything</h3><p>Data revisions, container tags, source commits, split manifests, and evaluation rules travel together.</p></article>
-          <article><b>02</b><h3>Isolate every case</h3><p>Each datapack executes in a clean container with bounded CPU, timeout, logs, and resumable output.</p></article>
-          <article><b>03</b><h3>Publish from CI</h3><p>Validated metrics flow into this page automatically after the full self-hosted run completes.</p></article>
+      <section id="methodology" class="methodology" aria-labelledby="methodology-title">
+        <h2 id="methodology-title">How to read the leaderboard</h2>
+        <div class="methodology-grid">
+          <article><h3>Primary metric</h3><p>MRR measures how highly the correct root-cause service appears in each predicted ranking. Higher is better.</p></article>
+          <article><h3>Ranking accuracy</h3><p>Top@k is the share of cases where the correct service appears within the first k predictions.</p></article>
+          <article><h3>Reproducibility</h3><p>Published runs use immutable containers and dataset revisions. The Run link opens the archived metrics.</p></article>
         </div>
       </section>
     </main>
 
     <footer>
       <span>RCABench Leaderboard</span>
-      <span id="updated-at">Last update —</span>
+      <a href="https://github.com/HamsterStation/rcabench-leaderboard">Source and submission guide</a>
     </footer>
     <script src="app.js"></script>
   </body>
