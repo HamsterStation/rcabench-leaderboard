@@ -13,7 +13,7 @@
   <body>
     <header class="site-header">
       <div class="header-inner">
-        <a class="brand" href="#leaderboard">RCABench</a>
+        <a class="brand" href="#leaderboard"><span class="brand-mark" aria-hidden="true">R</span><span>RCABench</span></a>
         <nav aria-label="Main navigation">
           <a class="active" href="#leaderboard">Leaderboard</a>
           <a href="#methodology">Methodology</a>
@@ -25,7 +25,10 @@
     <main>
       <section class="page-intro" aria-labelledby="page-title">
         <div>
-          <p class="kicker">Public benchmark</p>
+          <div class="intro-labels">
+            <p class="kicker">Public benchmark</p>
+            <span class="status-chip"><span aria-hidden="true"></span> Verified runs</span>
+          </div>
           <h1 id="page-title">RCABench Leaderboard</h1>
           <p>Reproducible service-level root cause analysis results. Every score is linked to a fixed dataset revision, algorithm commit, and archived run.</p>
         </div>
@@ -68,7 +71,7 @@
                 <th scope="col"><button class="sort-button" data-sort="top@5">Top@5 <span aria-hidden="true"></span></button></th>
                 <th scope="col"><button class="sort-button" data-sort="avg@3">Avg@3 <span aria-hidden="true"></span></button></th>
                 <th scope="col"><button class="sort-button" data-sort="avg@5">Avg@5 <span aria-hidden="true"></span></button></th>
-                <th class="primary" scope="col"><button class="sort-button" data-sort="mrr">MRR <span aria-hidden="true"></span></button></th>
+                <th scope="col"><button class="sort-button" data-sort="mrr">MRR <span aria-hidden="true"></span></button></th>
                 <th scope="col"><button class="sort-button" data-sort="average_algorithm_seconds">Avg. time <span aria-hidden="true"></span></button></th>
                 <th scope="col">Run</th>
               </tr>
