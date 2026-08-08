@@ -11,6 +11,7 @@ const state = {
 
 const percent = value => `${(Number(value) * 100).toFixed(2)}%`;
 const seconds = value => value == null ? "—" : `${Number(value).toFixed(2)}s`;
+const activeSortClass = key => key === state.sortKey ? " active-sort" : "";
 const escapeHtml = value => String(value).replace(/[&<>'"]/g, character => ({
   "&": "&amp;",
   "<": "&lt;",
@@ -64,7 +65,9 @@ function renderRows() {
   document.querySelector("#result-count").textContent = `${entries.length} algorithm${entries.length === 1 ? "" : "s"}`;
   document.querySelectorAll(".sort-button").forEach(button => {
     const active = button.dataset.sort === state.sortKey;
-    button.closest("th").setAttribute("aria-sort", active ? (state.sortDirection === "asc" ? "ascending" : "descending") : "none");
+    const heading = button.closest("th");
+    heading.classList.toggle("active-sort", active);
+    heading.setAttribute("aria-sort", active ? (state.sortDirection === "asc" ? "ascending" : "descending") : "none");
     button.querySelector("span").textContent = active ? (state.sortDirection === "asc" ? "↑" : "↓") : "";
   });
 
@@ -76,18 +79,18 @@ function renderRows() {
   body.innerHTML = entries.map((entry, index) => `
     <tr>
       <td class="rank-column">${index + 1}</td>
-      <td>
+      <td class="algorithm-column${activeSortClass("display_name")}">
         <div class="algorithm-name">${escapeHtml(entry.display_name)}</div>
         <div class="algorithm-meta"><code>${escapeHtml(entry.algorithm_commit.slice(0, 8))}</code> · ${Number(entry.cases).toLocaleString()} cases</div>
       </td>
       <td><span class="scope-badge">${escapeHtml(entry.scope)}</span></td>
-      <td class="number">${percent(entry.metrics["top@1"])}</td>
-      <td class="number">${percent(entry.metrics["top@3"])}</td>
-      <td class="number">${percent(entry.metrics["top@5"])}</td>
-      <td class="number">${percent(entry.metrics["avg@3"])}</td>
-      <td class="number">${percent(entry.metrics["avg@5"])}</td>
-      <td class="number primary"><strong>${percent(entry.metrics.mrr)}</strong></td>
-      <td class="number">${seconds(entry.metrics.average_algorithm_seconds)}</td>
+      <td class="number${activeSortClass("top@1")}">${percent(entry.metrics["top@1"])}</td>
+      <td class="number${activeSortClass("top@3")}">${percent(entry.metrics["top@3"])}</td>
+      <td class="number${activeSortClass("top@5")}">${percent(entry.metrics["top@5"])}</td>
+      <td class="number${activeSortClass("avg@3")}">${percent(entry.metrics["avg@3"])}</td>
+      <td class="number${activeSortClass("avg@5")}">${percent(entry.metrics["avg@5"])}</td>
+      <td class="number${activeSortClass("mrr")}">${percent(entry.metrics.mrr)}</td>
+      <td class="number${activeSortClass("average_algorithm_seconds")}">${seconds(entry.metrics.average_algorithm_seconds)}</td>
       <td><a class="run-link" href="${archiveUrl(entry, state.board)}">Metrics <span aria-hidden="true">↗</span></a></td>
     </tr>`).join("");
 }
