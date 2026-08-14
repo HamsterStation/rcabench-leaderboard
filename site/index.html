@@ -47,16 +47,32 @@
         <div class="summary-grid" aria-label="Benchmark summary">
           <div class="summary-card"><span>Evaluated algorithms</span><strong id="algorithm-count">—</strong></div>
           <div class="summary-card"><span>Dataset cases</span><strong id="case-count">—</strong></div>
-          <div class="summary-card"><span>Dataset revision</span><strong class="mono" id="dataset-revision">—</strong></div>
+          <div class="summary-card summary-card-wide"><span id="leader-label">MRR leader</span><strong id="leader-value">—</strong></div>
+          <div class="summary-card"><span>Median avg. time</span><strong id="median-runtime">—</strong></div>
+          <div class="summary-card summary-card-revision"><span>Dataset revision</span><strong class="mono" id="dataset-revision">—</strong></div>
         </div>
 
         <div class="toolbar">
-          <label class="search-field">
-            <span class="sr-only">Search algorithms</span>
-            <svg aria-hidden="true" viewBox="0 0 24 24"><path d="m21 21-4.35-4.35m2.35-5.65a8 8 0 1 1-16 0 8 8 0 0 1 16 0Z"/></svg>
-            <input id="algorithm-search" type="search" placeholder="Search algorithms" autocomplete="off">
-          </label>
-          <p id="result-count" aria-live="polite"></p>
+          <div class="toolbar-main">
+            <label class="search-field">
+              <span class="sr-only">Search algorithms</span>
+              <svg aria-hidden="true" viewBox="0 0 24 24"><path d="m21 21-4.35-4.35m2.35-5.65a8 8 0 1 1-16 0 8 8 0 0 1 16 0Z"/></svg>
+              <input id="algorithm-search" type="search" placeholder="Search algorithms" autocomplete="off">
+            </label>
+            <div class="scope-control" aria-label="Filter evaluation scope">
+              <span>Compare</span>
+              <div class="scope-options">
+                <button type="button" data-scope="all-scopes" aria-pressed="true">All scopes</button>
+                <button type="button" data-scope="all" aria-pressed="false">Full dataset</button>
+                <button type="button" data-scope="test" aria-pressed="false">Test split</button>
+              </div>
+            </div>
+            <p id="result-count" aria-live="polite"></p>
+          </div>
+          <div class="toolbar-context">
+            <p id="sort-summary" aria-live="polite">Sorted by MRR · High to low</p>
+            <p id="scope-note"></p>
+          </div>
         </div>
 
         <div class="table-wrap">
@@ -66,12 +82,12 @@
                 <th class="rank-column" scope="col">#</th>
                 <th scope="col"><button class="sort-button" data-sort="display_name">Algorithm <span aria-hidden="true"></span></button></th>
                 <th scope="col">Scope</th>
-                <th scope="col"><button class="sort-button" data-sort="top@1">Top@1 <span aria-hidden="true"></span></button></th>
-                <th scope="col"><button class="sort-button" data-sort="top@3">Top@3 <span aria-hidden="true"></span></button></th>
-                <th scope="col"><button class="sort-button" data-sort="top@5">Top@5 <span aria-hidden="true"></span></button></th>
-                <th scope="col"><button class="sort-button" data-sort="avg@3">Avg@3 <span aria-hidden="true"></span></button></th>
-                <th scope="col"><button class="sort-button" data-sort="avg@5">Avg@5 <span aria-hidden="true"></span></button></th>
-                <th scope="col"><button class="sort-button" data-sort="mrr">MRR <span aria-hidden="true"></span></button></th>
+                <th scope="col"><button class="sort-button" data-sort="top@1"><abbr title="Top-1 accuracy">Top@1</abbr> <span aria-hidden="true"></span></button></th>
+                <th scope="col"><button class="sort-button" data-sort="top@3"><abbr title="Top-3 accuracy">Top@3</abbr> <span aria-hidden="true"></span></button></th>
+                <th scope="col"><button class="sort-button" data-sort="top@5"><abbr title="Top-5 accuracy">Top@5</abbr> <span aria-hidden="true"></span></button></th>
+                <th scope="col"><button class="sort-button" data-sort="avg@3"><abbr title="Mean Top@1 through Top@3">Avg@3</abbr> <span aria-hidden="true"></span></button></th>
+                <th scope="col"><button class="sort-button" data-sort="avg@5"><abbr title="Mean Top@1 through Top@5">Avg@5</abbr> <span aria-hidden="true"></span></button></th>
+                <th scope="col"><button class="sort-button" data-sort="mrr"><abbr title="Mean reciprocal rank">MRR</abbr> <span aria-hidden="true"></span></button></th>
                 <th scope="col"><button class="sort-button" data-sort="average_algorithm_seconds">Avg. time <span aria-hidden="true"></span></button></th>
                 <th scope="col">Run</th>
               </tr>
@@ -86,7 +102,8 @@
         <div class="methodology-grid">
           <article><h3>Primary metric</h3><p>MRR measures how highly the correct root-cause service appears in each predicted ranking. Higher is better.</p></article>
           <article><h3>Ranking accuracy</h3><p>Top@k is the share of cases where the correct service appears within the first k predictions.</p></article>
-          <article><h3>Reproducibility</h3><p>Published runs use immutable containers and dataset revisions. The Run link opens the archived metrics.</p></article>
+          <article><h3>Efficiency</h3><p>Average time makes the accuracy–runtime trade-off visible. Lower is better when sorting this column.</p></article>
+          <article><h3>Comparable runs</h3><p>Use the scope control to compare full-dataset runs with each other. Every Run link opens immutable archived metrics.</p></article>
         </div>
       </section>
     </main>

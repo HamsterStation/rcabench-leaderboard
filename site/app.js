@@ -1,10 +1,21 @@
 const metricKeys = new Set(["top@1", "top@3", "top@5", "avg@3", "avg@5", "mrr", "average_algorithm_seconds"]);
 const repositoryUrl = "https://github.com/HamsterStation/rcabench-leaderboard";
+const metricLabels = {
+  "display_name": "Algorithm",
+  "top@1": "Top@1",
+  "top@3": "Top@3",
+  "top@5": "Top@5",
+  "avg@3": "Avg@3",
+  "avg@5": "Avg@5",
+  "mrr": "MRR",
+  "average_algorithm_seconds": "Average time",
+};
 
 const state = {
   boards: [],
   board: null,
   query: "",
+  scope: "all-scopes",
   sortKey: "mrr",
   sortDirection: "desc",
 };
@@ -27,8 +38,35 @@ function latestEntries(board) {
 }
 
 function entryValue(entry, key) {
-  if (metricKeys.has(key)) return Number(entry.metrics[key] ?? Number.NEGATIVE_INFINITY);
+  if (metricKeys.has(key)) return entry.metrics[key] == null ? null : Number(entry.metrics[key]);
   return String(entry[key] ?? "").toLocaleLowerCase();
+}
+
+function defaultDirection(key) {
+  return key === "display_name" || key === "average_algorithm_seconds" ? "asc" : "desc";
+}
+
+function directionLabel() {
+  if (state.sortKey === "display_name") return state.sortDirection === "asc" ? "A to Z" : "Z to A";
+  return state.sortDirection === "asc" ? "Low to high" : "High to low";
+}
+
+function formatMetric(key, value) {
+  if (value == null) return "—";
+  if (key === "average_algorithm_seconds") return seconds(value);
+  if (metricKeys.has(key)) return percent(value);
+  return String(value);
+}
+
+function scopedEntries() {
+  return latestEntries(state.board).filter(entry => state.scope === "all-scopes" || entry.scope === state.scope);
+}
+
+function median(values) {
+  const sorted = values.filter(Number.isFinite).sort((a, b) => a - b);
+  if (!sorted.length) return null;
+  const middle = Math.floor(sorted.length / 2);
+  return sorted.length % 2 ? sorted[middle] : (sorted[middle - 1] + sorted[middle]) / 2;
 }
 
 function archiveUrl(entry, board) {
@@ -42,6 +80,8 @@ function updateUrl() {
   url.searchParams.set("benchmark", state.board.benchmark.id);
   if (state.query) url.searchParams.set("q", state.query);
   else url.searchParams.delete("q");
+  if (state.scope !== "all-scopes") url.searchParams.set("scope", state.scope);
+  else url.searchParams.delete("scope");
   if (state.sortKey !== "mrr") url.searchParams.set("sort", state.sortKey);
   else url.searchParams.delete("sort");
   if (state.sortDirection !== "desc") url.searchParams.set("direction", state.sortDirection);
@@ -53,16 +93,51 @@ function renderRows() {
   const body = document.querySelector("#leaderboard-body");
   const direction = state.sortDirection === "asc" ? 1 : -1;
   const query = state.query.toLocaleLowerCase();
-  const entries = latestEntries(state.board)
+  const comparableEntries = scopedEntries();
+  const entries = comparableEntries
     .filter(entry => `${entry.display_name} ${entry.algorithm}`.toLocaleLowerCase().includes(query))
     .sort((left, right) => {
       const a = entryValue(left, state.sortKey);
       const b = entryValue(right, state.sortKey);
+      if (a == null || b == null) {
+        if (a == null && b == null) return left.display_name.localeCompare(right.display_name);
+        return a == null ? 1 : -1;
+      }
       const result = typeof a === "number" ? a - b : a.localeCompare(b);
       return result === 0 ? left.display_name.localeCompare(right.display_name) : result * direction;
     });
 
   document.querySelector("#result-count").textContent = `${entries.length} algorithm${entries.length === 1 ? "" : "s"}`;
+  document.querySelector("#sort-summary").innerHTML = `Sorted by <strong>${metricLabels[state.sortKey]}</strong> · ${directionLabel()}`;
+  document.querySelectorAll(".scope-options button").forEach(button => {
+    button.setAttribute("aria-pressed", String(button.dataset.scope === state.scope));
+  });
+
+  const scopeCounts = latestEntries(state.board).reduce((counts, entry) => {
+    counts[entry.scope] = (counts[entry.scope] ?? 0) + 1;
+    return counts;
+  }, {});
+  document.querySelector("#scope-note").textContent = state.scope === "all-scopes"
+    ? `${scopeCounts.all ?? 0} full-dataset · ${scopeCounts.test ?? 0} test-split runs shown together`
+    : `Comparing ${comparableEntries.length} ${state.scope === "all" ? "full-dataset" : "test-split"} runs`;
+
+  const summaryEntries = [...comparableEntries].sort((left, right) => {
+    const a = entryValue(left, state.sortKey);
+    const b = entryValue(right, state.sortKey);
+    if (a == null || b == null) return a == null ? 1 : -1;
+    const result = typeof a === "number" ? a - b : a.localeCompare(b);
+    return result * direction;
+  });
+  const leader = summaryEntries[0];
+  document.querySelector("#leader-label").textContent = state.sortKey === "average_algorithm_seconds"
+    ? "Fastest average"
+    : state.sortKey === "display_name" ? "First algorithm" : `${metricLabels[state.sortKey]} leader`;
+  document.querySelector("#leader-value").innerHTML = leader
+    ? `${escapeHtml(leader.display_name)} <small>${formatMetric(state.sortKey, entryValue(leader, state.sortKey))}</small>`
+    : "—";
+  document.querySelector("#median-runtime").textContent = seconds(median(comparableEntries.map(entry =>
+    entry.metrics.average_algorithm_seconds == null ? Number.NaN : Number(entry.metrics.average_algorithm_seconds)
+  )));
   document.querySelectorAll(".sort-button").forEach(button => {
     const active = button.dataset.sort === state.sortKey;
     const heading = button.closest("th");
@@ -78,7 +153,7 @@ function renderRows() {
 
   body.innerHTML = entries.map((entry, index) => `
     <tr>
-      <td class="rank-column">${index + 1}</td>
+      <td class="rank-column"><span class="rank-badge rank-${Math.min(index + 1, 4)}">${index + 1}</span></td>
       <td class="algorithm-column${activeSortClass("display_name")}">
         <div class="algorithm-name">${escapeHtml(entry.display_name)}</div>
         <div class="algorithm-meta"><code>${escapeHtml(entry.algorithm_commit.slice(0, 8))}</code> · ${Number(entry.cases).toLocaleString()} cases</div>
@@ -124,6 +199,14 @@ function bindControls() {
     updateUrl();
   });
 
+  document.querySelector(".scope-options").addEventListener("click", event => {
+    const button = event.target.closest("button[data-scope]");
+    if (!button) return;
+    state.scope = button.dataset.scope;
+    renderRows();
+    updateUrl();
+  });
+
   document.querySelector("thead").addEventListener("click", event => {
     const button = event.target.closest("button[data-sort]");
     if (!button) return;
@@ -131,7 +214,7 @@ function bindControls() {
       state.sortDirection = state.sortDirection === "desc" ? "asc" : "desc";
     } else {
       state.sortKey = button.dataset.sort;
-      state.sortDirection = button.dataset.sort === "display_name" ? "asc" : "desc";
+      state.sortDirection = defaultDirection(button.dataset.sort);
     }
     renderRows();
     updateUrl();
@@ -148,7 +231,10 @@ async function render() {
   const requestedBoard = params.get("benchmark");
   const requestedSort = params.get("sort");
   if (requestedSort && (metricKeys.has(requestedSort) || requestedSort === "display_name")) state.sortKey = requestedSort;
-  if (params.get("direction") === "asc") state.sortDirection = "asc";
+  state.sortDirection = params.has("direction")
+    ? (params.get("direction") === "asc" ? "asc" : "desc")
+    : defaultDirection(state.sortKey);
+  if (["all", "test"].includes(params.get("scope"))) state.scope = params.get("scope");
   state.query = params.get("q") ?? "";
 
   document.querySelector("#algorithm-search").value = state.query;
